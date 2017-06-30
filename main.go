@@ -1,9 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"net"
 	"os"
+	"strconv"
+	"strings"
+	"io"
 )
 
 const (
@@ -12,6 +16,8 @@ const (
 	userClientsPort = "9099"
 )
 
+var users = make(map[int]*net.Conn)
+
 func main() {
 	// Initialize event source listener
 	es, err := net.Listen("tcp", host+":"+eventSourcePort)
@@ -19,7 +25,10 @@ func main() {
 		fmt.Println("Error listening for events:", err.Error())
 		os.Exit(1)
 	}
-	defer es.Close()
+	defer func() {
+		fmt.Println("Closing event listener...")
+		es.Close()
+	}()
 	fmt.Println("Listening for events on " + host + ":" + eventSourcePort)
 
 	// Initialize user clients listener
@@ -28,12 +37,18 @@ func main() {
 		fmt.Println("Error listening for clients:", err.Error())
 		os.Exit(1)
 	}
-	defer uc.Close()
+	defer func () {
+		fmt.Println("Closing client listener...")
+		uc.Close()
+	}()
 	fmt.Println("Listening for user clients on " + host + ":" + userClientsPort)
 
 	// Handle requests concurrently
 	go acceptEvents(es)
-	acceptClients(uc)
+	go acceptClients(uc)
+
+	// Block main goroutine
+	fmt.Scanln()
 }
 
 func acceptEvents(l net.Listener) {
@@ -42,7 +57,7 @@ func acceptEvents(l net.Listener) {
 		if err != nil {
 			fmt.Println("Error accepting:", err.Error())
 		}
-		go handleEvent(c)
+		go handleEvents(c)
 	}
 }
 
@@ -56,22 +71,44 @@ func acceptClients(l net.Listener) {
 	}
 }
 
-func handleEvent(conn net.Conn) {
-	buf := make([]byte, 1024)
-	_, err := conn.Read(buf)
-	if err != nil {
-		fmt.Println("Error reading event:", err.Error())
+func handleEvents(conn net.Conn) {
+	defer func() {
+		fmt.Println("Closing event connection...")
+		conn.Close()
+	}()
+
+	// Continually read from connection
+	for {
+		message, err := bufio.NewReader(conn).ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			fmt.Println("Error reading event:", err.Error())
+		}
+		fmt.Println("Got an event:", strings.TrimSpace(message))
 	}
-	fmt.Println("Got an event:", string(buf))
-	conn.Close()
 }
 
 func handleClient(conn net.Conn) {
-	buf := make([]byte, 1024)
-	_, err := conn.Read(buf)
+	// TODO Keep connection open after receiving user ID (channels?)
+	defer func() {
+		fmt.Println("Closing client connection...")
+		conn.Close()
+	}()
+
+	message, err := bufio.NewReader(conn).ReadString('\n')
 	if err != nil {
 		fmt.Println("Error reading client request:", err.Error())
 	}
-	fmt.Println("Got a client request:", string(buf))
-	conn.Close()
+	fmt.Println("Got a message from user:", strings.TrimSpace(message))
+
+	// Parse user ID
+	userId, err := strconv.Atoi(strings.TrimSpace(message))
+	if err != nil {
+		fmt.Printf("Invalid user ID %s: %s", userId, err.Error())
+	}
+
+	// Register user (map ID to connection)
+	users[userId] = &conn
 }
