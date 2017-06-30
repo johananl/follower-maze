@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"strconv"
@@ -27,26 +28,26 @@ func main() {
 	// Initialize event source listener
 	es, err := net.Listen("tcp", host+":"+eventSourcePort)
 	if err != nil {
-		fmt.Println("Error listening for events:", err.Error())
+		log.Println("Error listening for events:", err.Error())
 		os.Exit(1)
 	}
 	defer func() {
-		fmt.Println("Closing event listener...")
+		log.Println("Closing event listener...")
 		es.Close()
 	}()
-	fmt.Println("Listening for events on " + host + ":" + eventSourcePort)
+	log.Println("Listening for events on " + host + ":" + eventSourcePort)
 
 	// Initialize user clients listener
 	uc, err := net.Listen("tcp", host+":"+userClientsPort)
 	if err != nil {
-		fmt.Println("Error listening for clients:", err.Error())
+		log.Println("Error listening for clients:", err.Error())
 		os.Exit(1)
 	}
 	defer func () {
-		fmt.Println("Closing client listener...")
+		log.Println("Closing client listener...")
 		uc.Close()
 	}()
-	fmt.Println("Listening for user clients on " + host + ":" + userClientsPort)
+	log.Println("Listening for user clients on " + host + ":" + userClientsPort)
 
 	// Handle requests concurrently
 	go acceptEvents(es)
@@ -60,7 +61,7 @@ func acceptEvents(l net.Listener) {
 	for {
 		c, err := l.Accept()
 		if err != nil {
-			fmt.Println("Error accepting:", err.Error())
+			log.Println("Error accepting:", err.Error())
 		}
 		go handleEvents(c)
 	}
@@ -70,7 +71,7 @@ func acceptClients(l net.Listener) {
 	for {
 		c, err := l.Accept()
 		if err != nil {
-			fmt.Println("Error accepting:", err.Error())
+			log.Println("Error accepting:", err.Error())
 		}
 		ch := make(chan User)
 		go handleClient(c, ch)
@@ -81,7 +82,7 @@ func acceptClients(l net.Listener) {
 
 func handleEvents(conn net.Conn) {
 	defer func() {
-		fmt.Println("Closing event connection...")
+		log.Println("Closing event connection...")
 		conn.Close()
 	}()
 
@@ -92,16 +93,16 @@ func handleEvents(conn net.Conn) {
 			if err == io.EOF {
 				break
 			}
-			fmt.Println("Error reading event:", err.Error())
+			log.Println("Error reading event:", err.Error())
 		}
-		fmt.Println("Got an event:", strings.TrimSpace(message))
+		log.Println("Got an event:", strings.TrimSpace(message))
 	}
 }
 
 func handleClient(conn net.Conn, ch chan User) {
 	// TODO Keep connection open after receiving user ID (channels?)
 	defer func() {
-		fmt.Printf("Closing client connection for %v...\n", &conn)
+		log.Printf("Closing client connection for %v...\n", &conn)
 		conn.Close()
 	}()
 
@@ -111,14 +112,14 @@ func handleClient(conn net.Conn, ch chan User) {
 			if err == io.EOF {
 				break
 			}
-			fmt.Println("Error reading client request:", err.Error())
+			log.Println("Error reading client request:", err.Error())
 		}
-		fmt.Println("Got a message from user:", strings.TrimSpace(message))
+		log.Println("Got a message from user:", strings.TrimSpace(message))
 
 		// Parse user ID
 		userId, err := strconv.Atoi(strings.TrimSpace(message))
 		if err != nil {
-			fmt.Printf("Invalid user ID %s: %s", userId, err.Error())
+			log.Printf("Invalid user ID %s: %s", userId, err.Error())
 		}
 
 		// Register user (map ID to connection)
