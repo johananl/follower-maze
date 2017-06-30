@@ -18,6 +18,11 @@ const (
 
 var users = make(map[int]*net.Conn)
 
+type User struct {
+	Id int
+	Connection *net.Conn
+}
+
 func main() {
 	// Initialize event source listener
 	es, err := net.Listen("tcp", host+":"+eventSourcePort)
@@ -67,7 +72,10 @@ func acceptClients(l net.Listener) {
 		if err != nil {
 			fmt.Println("Error accepting:", err.Error())
 		}
-		go handleClient(c)
+		ch := make(chan User)
+		go handleClient(c, ch)
+		u := <-ch
+		users[u.Id] = u.Connection
 	}
 }
 
@@ -90,25 +98,31 @@ func handleEvents(conn net.Conn) {
 	}
 }
 
-func handleClient(conn net.Conn) {
+func handleClient(conn net.Conn, ch chan User) {
 	// TODO Keep connection open after receiving user ID (channels?)
 	defer func() {
-		fmt.Println("Closing client connection...")
+		fmt.Printf("Closing client connection for %v...\n", &conn)
 		conn.Close()
 	}()
 
-	message, err := bufio.NewReader(conn).ReadString('\n')
-	if err != nil {
-		fmt.Println("Error reading client request:", err.Error())
-	}
-	fmt.Println("Got a message from user:", strings.TrimSpace(message))
+	for {
+		message, err := bufio.NewReader(conn).ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			fmt.Println("Error reading client request:", err.Error())
+		}
+		fmt.Println("Got a message from user:", strings.TrimSpace(message))
 
-	// Parse user ID
-	userId, err := strconv.Atoi(strings.TrimSpace(message))
-	if err != nil {
-		fmt.Printf("Invalid user ID %s: %s", userId, err.Error())
-	}
+		// Parse user ID
+		userId, err := strconv.Atoi(strings.TrimSpace(message))
+		if err != nil {
+			fmt.Printf("Invalid user ID %s: %s", userId, err.Error())
+		}
 
-	// Register user (map ID to connection)
-	users[userId] = &conn
+		// Register user (map ID to connection)
+		//users[userId] = &conn
+		ch <- User{userId, &conn}
+	}
 }
