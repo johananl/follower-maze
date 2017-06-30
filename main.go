@@ -3,12 +3,13 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
-	"strconv"
 	"strings"
-	"io"
+	"regexp"
+	"errors"
 )
 
 const (
@@ -17,11 +18,19 @@ const (
 	userClientsPort = "9099"
 )
 
-var users = make(map[int]*net.Conn)
+var users = make(map[string]net.Conn)
 
 type User struct {
-	Id int
-	Connection *net.Conn
+	Id         string
+	Connection net.Conn
+}
+
+type Event struct {
+	// TODO Restrict types
+	Sequence   string
+	Type       string
+	FromUserId string
+	ToUserId   string
 }
 
 func main() {
@@ -43,7 +52,7 @@ func main() {
 		log.Println("Error listening for clients:", err.Error())
 		os.Exit(1)
 	}
-	defer func () {
+	defer func() {
 		log.Println("Closing client listener...")
 		uc.Close()
 	}()
@@ -64,6 +73,7 @@ func acceptEvents(l net.Listener) {
 		if err != nil {
 			log.Println("Error accepting:", err.Error())
 		}
+
 		go handleEvents(c)
 	}
 }
@@ -75,10 +85,11 @@ func acceptClients(l net.Listener) {
 		if err != nil {
 			log.Println("Error accepting:", err.Error())
 		}
+
 		ch := make(chan User)
 		go handleClient(c, ch)
-		u := <-ch
-		users[u.Id] = u.Connection
+		user := <-ch
+		users[user.Id] = user.Connection
 	}
 }
 
@@ -94,11 +105,21 @@ func handleEvents(conn net.Conn) {
 		message, err := bufio.NewReader(conn).ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
+				log.Println("Got EOF on event connection")
 				break
 			}
 			log.Println("Error reading event:", err.Error())
+			continue
 		}
 		log.Println("Got an event:", strings.TrimSpace(message))
+
+		event, err := parseEvent(strings.TrimSpace(message))
+		if err != nil {
+			log.Println("Event parsing failed:", err)
+			continue
+		}
+
+		go processEvent(event)
 	}
 }
 
@@ -106,7 +127,7 @@ func handleClient(conn net.Conn, ch chan User) {
 	// TODO Keep connection open after receiving user ID (channels?)
 	// Close connection when done reading
 	defer func() {
-		log.Printf("Closing client connection for %v...\n", &conn)
+		//log.Printf("Closing client connection for %v...\n", &conn)
 		conn.Close()
 	}()
 
@@ -122,12 +143,116 @@ func handleClient(conn net.Conn, ch chan User) {
 		log.Println("Got a message from user:", strings.TrimSpace(message))
 
 		// Parse user ID
-		userId, err := strconv.Atoi(strings.TrimSpace(message))
-		if err != nil {
-			log.Printf("Invalid user ID %s: %s", userId, err.Error())
-		}
+		//userId, err := strconv.Atoi(strings.TrimSpace(message))
+		//if err != nil {
+		//	log.Printf("Invalid user ID %s: %s", userId, err.Error())
+		//}
+		userId := strings.TrimSpace(message)
 
 		// Register user (map ID to connection)
-		ch <- User{userId, &conn}
+		ch <- User{userId, conn}
+	}
+}
+
+// parseEvent gets a string and returns an Event or an error if it cannot parse.
+func parseEvent(e string) (*Event, error) {
+	log.Printf("Parsing event %s", e)
+
+	fPattern := regexp.MustCompile(`^(\d+)\|F\|(\d+)\|(\d+)$`)
+	uPattern := regexp.MustCompile(`^(\d+)\|U\|(\d+)\|(\d+)$`)
+	bPattern := regexp.MustCompile(`^(\d+)\|B$`)
+	pPattern := regexp.MustCompile(`^(\d+)\|P\|(\d+)\|(\d+)$`)
+	sPattern := regexp.MustCompile(`^(\d+)\|S\|(\d+)$`)
+
+	var result *Event
+
+	if m := fPattern.FindStringSubmatch(e); len(m) != 0 {
+		//log.Println("Message type is: Follow")
+		result = &Event{
+			Sequence: m[1],
+			Type: "F",
+			FromUserId: m[2],
+			ToUserId: m[3],
+		}
+	} else if m := uPattern.FindStringSubmatch(e); len(m) != 0 {
+		//log.Println("Message type is: Unfollow")
+		result = &Event{
+			Sequence: m[1],
+			Type: "U",
+			FromUserId: m[2],
+			ToUserId: m[3],
+		}
+	} else if m := bPattern.FindStringSubmatch(e); len(m) != 0 {
+		//log.Println("Message type is: Broadcast")
+		result = &Event{
+			Sequence: m[1],
+			Type: "B",
+		}
+	} else if m := pPattern.FindStringSubmatch(e); len(m) != 0 {
+		//log.Println("Message type is: PrivateMsg")
+		result = &Event{
+			Sequence: m[1],
+			Type: "P",
+			FromUserId: m[2],
+			ToUserId: m[3],
+		}
+	} else if m := sPattern.FindStringSubmatch(e); len(m) != 0 {
+		//log.Println("Message type is: StatusUpdate")
+		result = &Event{
+			Sequence: m[1],
+			Type: "S",
+			FromUserId: m[2],
+		}
+	} else {
+		return nil, errors.New("Invalid message: " + e)
+	}
+
+	return result, nil
+}
+
+func constructEvent(e *Event) string {
+	var result string
+
+	switch e.Type {
+	case "F", "U", "P":
+		result = fmt.Sprintf("%s|%s|%s|%s", e.Sequence, e.Type, e.FromUserId, e.ToUserId)
+	case "B":
+		result = fmt.Sprintf("%s|%s", e.Sequence, e.Type)
+	case "S":
+		result = fmt.Sprintf("%s|%s|%s", e.Sequence, e.Type, e.FromUserId)
+	}
+
+	return result
+}
+
+func processEvent(e *Event) {
+	switch e.Type {
+	case "F":
+		log.Println("Processing Follow event")
+		notifyUser(e.ToUserId, constructEvent(e))
+	case "U":
+		log.Println("processing Unfollow event")
+		notifyUser(e.ToUserId, constructEvent(e))
+	case "B":
+		log.Println("Processing broadcast event")
+		// Notify all users
+		for u, _ := range users {
+			notifyUser(u, constructEvent(e))
+		}
+	case "P":
+		log.Println("Processing Private Msg event")
+		notifyUser(e.ToUserId, constructEvent(e))
+	case "S":
+		log.Println("Processing Status Update event")
+	default:
+		log.Println("Invalid event type - ignoring")
+	}
+}
+
+func notifyUser(id string, message string) {
+	log.Printf("Notifying user %s with message %s", id, message)
+	// Get connection for user
+	if c, ok := users[id]; ok {
+		c.Write([]byte(message))
 	}
 }
