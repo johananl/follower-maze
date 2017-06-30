@@ -58,6 +58,7 @@ func main() {
 }
 
 func acceptEvents(l net.Listener) {
+	// Continually accept event connections
 	for {
 		c, err := l.Accept()
 		if err != nil {
@@ -68,6 +69,7 @@ func acceptEvents(l net.Listener) {
 }
 
 func acceptClients(l net.Listener) {
+	// Continually accept client connections
 	for {
 		c, err := l.Accept()
 		if err != nil {
@@ -81,6 +83,7 @@ func acceptClients(l net.Listener) {
 }
 
 func handleEvents(conn net.Conn) {
+	// Close connection when done reading
 	defer func() {
 		log.Println("Closing event connection...")
 		conn.Close()
@@ -101,11 +104,13 @@ func handleEvents(conn net.Conn) {
 
 func handleClient(conn net.Conn, ch chan User) {
 	// TODO Keep connection open after receiving user ID (channels?)
+	// Close connection when done reading
 	defer func() {
 		log.Printf("Closing client connection for %v...\n", &conn)
 		conn.Close()
 	}()
 
+	// Continually read from connection
 	for {
 		message, err := bufio.NewReader(conn).ReadString('\n')
 		if err != nil {
@@ -123,7 +128,6 @@ func handleClient(conn net.Conn, ch chan User) {
 		}
 
 		// Register user (map ID to connection)
-		//users[userId] = &conn
 		ch <- User{userId, &conn}
 	}
 }
