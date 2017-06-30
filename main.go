@@ -7,27 +7,27 @@ import (
 )
 
 const (
-	HOST              = "localhost"
-	EVENT_SOURCE_PORT = "9090"
-	USER_CLIENTS_PORT = "9099"
+	host            = "localhost"
+	eventSourcePort = "9090"
+	userClientsPort = "9099"
 )
 
 func main() {
-	es, err := net.Listen("tcp", HOST+":"+EVENT_SOURCE_PORT)
+	es, err := net.Listen("tcp", host+":"+eventSourcePort)
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
 		os.Exit(1)
 	}
 	defer es.Close()
-	fmt.Println("Listening for events on " + HOST + ":" + EVENT_SOURCE_PORT)
+	fmt.Println("Listening for events on " + host + ":" + eventSourcePort)
 
-	uc, err := net.Listen("tcp", HOST+":"+USER_CLIENTS_PORT)
+	uc, err := net.Listen("tcp", host+":"+userClientsPort)
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
 		os.Exit(1)
 	}
 	defer uc.Close()
-	fmt.Println("Listening for user clients on " + HOST + ":" + USER_CLIENTS_PORT)
+	fmt.Println("Listening for user clients on " + host + ":" + userClientsPort)
 
 	go acceptLoop(es)
 	acceptLoop(uc)
