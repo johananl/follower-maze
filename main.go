@@ -2,14 +2,14 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"os"
-	"strings"
 	"regexp"
-	"errors"
+	"strings"
 	"sync"
 )
 
@@ -105,8 +105,9 @@ func handleEvents(conn net.Conn) {
 	}()
 
 	// Continually read from connection
+	br := bufio.NewReader(conn)
 	for {
-		message, err := bufio.NewReader(conn).ReadString('\n')
+		message, err := br.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
 				log.Println("Got EOF on event connection")
@@ -115,7 +116,6 @@ func handleEvents(conn net.Conn) {
 			log.Println("Error reading event:", err.Error())
 			continue
 		}
-		log.Println("Got an event:", strings.TrimSpace(message))
 
 		event, err := parseEvent(strings.TrimSpace(message))
 		if err != nil {
@@ -144,7 +144,7 @@ func handleClient(conn net.Conn, ch chan User) {
 			}
 			log.Println("Error reading client request:", err.Error())
 		}
-		log.Println("Got a message from user:", strings.TrimSpace(message))
+		//log.Println("Got a message from user:", strings.TrimSpace(message))
 
 		// Parse user ID
 		//userId, err := strconv.Atoi(strings.TrimSpace(message))
@@ -160,7 +160,7 @@ func handleClient(conn net.Conn, ch chan User) {
 
 // parseEvent gets a string and returns an Event or an error if it cannot parse.
 func parseEvent(e string) (*Event, error) {
-	log.Printf("Parsing event %s", e)
+	//log.Printf("Parsing event %s", e)
 
 	fPattern := regexp.MustCompile(`^(\d+)\|F\|(\d+)\|(\d+)$`)
 	uPattern := regexp.MustCompile(`^(\d+)\|U\|(\d+)\|(\d+)$`)
@@ -173,38 +173,38 @@ func parseEvent(e string) (*Event, error) {
 	if m := fPattern.FindStringSubmatch(e); len(m) != 0 {
 		//log.Println("Message type is: Follow")
 		result = &Event{
-			Sequence: m[1],
-			Type: "F",
+			Sequence:   m[1],
+			Type:       "F",
 			FromUserId: m[2],
-			ToUserId: m[3],
+			ToUserId:   m[3],
 		}
 	} else if m := uPattern.FindStringSubmatch(e); len(m) != 0 {
 		//log.Println("Message type is: Unfollow")
 		result = &Event{
-			Sequence: m[1],
-			Type: "U",
+			Sequence:   m[1],
+			Type:       "U",
 			FromUserId: m[2],
-			ToUserId: m[3],
+			ToUserId:   m[3],
 		}
 	} else if m := bPattern.FindStringSubmatch(e); len(m) != 0 {
 		//log.Println("Message type is: Broadcast")
 		result = &Event{
 			Sequence: m[1],
-			Type: "B",
+			Type:     "B",
 		}
 	} else if m := pPattern.FindStringSubmatch(e); len(m) != 0 {
 		//log.Println("Message type is: PrivateMsg")
 		result = &Event{
-			Sequence: m[1],
-			Type: "P",
+			Sequence:   m[1],
+			Type:       "P",
 			FromUserId: m[2],
-			ToUserId: m[3],
+			ToUserId:   m[3],
 		}
 	} else if m := sPattern.FindStringSubmatch(e); len(m) != 0 {
 		//log.Println("Message type is: StatusUpdate")
 		result = &Event{
-			Sequence: m[1],
-			Type: "S",
+			Sequence:   m[1],
+			Type:       "S",
 			FromUserId: m[2],
 		}
 	} else {
@@ -232,23 +232,23 @@ func constructEvent(e *Event) string {
 func processEvent(e *Event) {
 	switch e.Type {
 	case "F":
-		log.Println("Processing Follow event")
+		//log.Println("Processing Follow event")
 		follow(e.FromUserId, e.ToUserId)
 		notifyUser(e.ToUserId, constructEvent(e))
 	case "U":
-		log.Println("processing Unfollow event")
+		//log.Println("Processing Unfollow event")
 		unfollow(e.FromUserId, e.ToUserId)
 	case "B":
-		log.Println("Processing broadcast event")
+		//log.Println("Processing broadcast event")
 		// Notify all users
 		for u, _ := range users {
 			notifyUser(u, constructEvent(e))
 		}
 	case "P":
-		log.Println("Processing Private Msg event")
+		//log.Println("Processing Private Msg event")
 		notifyUser(e.ToUserId, constructEvent(e))
 	case "S":
-		log.Println("Processing Status Update event")
+		//log.Println("Processing Status Update event")
 		fLock.RLock()
 		defer fLock.RUnlock()
 		for _, u := range followers[e.FromUserId] {
@@ -260,7 +260,7 @@ func processEvent(e *Event) {
 }
 
 func notifyUser(id string, message string) {
-	log.Printf("Notifying user %s with message %s", id, message)
+	//log.Printf("Notifying user %s with message %s", id, message)
 	// Get connection for user
 	if c, ok := users[id]; ok {
 		c.Write([]byte(message))
@@ -268,19 +268,19 @@ func notifyUser(id string, message string) {
 }
 
 func follow(from, to string) {
-	log.Printf("User %s follows %s", from, to)
+	//log.Printf("User %s follows %s", from, to)
 	fLock.Lock()
 	defer fLock.Unlock()
 	followers[to] = append(followers[to], from)
 }
 
 func unfollow(from, to string) {
-	log.Printf("User %s unfollows %s", from, to)
+	//log.Printf("User %s unfollows %s", from, to)
 	fLock.Lock()
 	defer fLock.Unlock()
 	for i := 0; i < len(followers[to]); i++ {
 		if followers[to][i] == from {
-			log.Printf("Found follower %s for user %s - removing", from, to)
+			//log.Printf("Found follower %s for user %s - removing", from, to)
 			followers[to] = append(followers[to][:i], followers[to][i+1:]...)
 		}
 	}
