@@ -25,6 +25,10 @@ var users = make(map[int]net.Conn)
 var followers = make(map[int][]int)
 var fLock = sync.RWMutex{}
 
+var queue = make(map[int]*Event)
+var qLock = sync.RWMutex{}
+var lastSeq int = 0
+
 type User struct {
 	Id         int
 	Connection net.Conn
@@ -64,6 +68,7 @@ func main() {
 	log.Println("Listening for user clients on " + host + ":" + userClientsPort)
 
 	// Handle requests concurrently
+	go processQueue()
 	go acceptEvents(es)
 	go acceptClients(uc)
 
@@ -124,7 +129,8 @@ func handleEvents(conn net.Conn) {
 			continue
 		}
 
-		go processEvent(event)
+		//go processEvent(event)
+		go queueEvent(event)
 	}
 }
 
@@ -265,7 +271,11 @@ func processEvent(e *Event) {
 		}
 	default:
 		log.Println("Invalid event type - ignoring")
+		return
 	}
+
+	// TODO Verify success before removing event
+	deleteEvent(e)
 }
 
 func notifyUser(id int, message string) {
@@ -293,4 +303,30 @@ func unfollow(from, to int) {
 			followers[to] = append(followers[to][:i], followers[to][i+1:]...)
 		}
 	}
+}
+
+func queueEvent(e *Event) {
+	log.Printf("Putting sequence %s in queue", e.Sequence)
+	qLock.Lock()
+	defer qLock.Unlock()
+	queue[e.Sequence] = e
+}
+
+func processQueue() {
+	for {
+		qLock.RLock()
+		if e, ok := queue[lastSeq + 1]; ok {
+			log.Printf("Processing sequence %d", e.Sequence)
+			go processEvent(e)
+		}
+		qLock.RUnlock()
+	}
+}
+
+func deleteEvent(e *Event) {
+	log.Printf("Deleting sequence %s from queue", e.Sequence)
+	qLock.Lock()
+	defer qLock.Unlock()
+	delete(queue, e.Sequence)
+	lastSeq = e.Sequence
 }
