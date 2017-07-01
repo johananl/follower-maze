@@ -151,14 +151,12 @@ func handleClient(conn net.Conn, ch chan User) {
 			}
 			log.Println("Error reading client request:", err.Error())
 		}
-		//log.Println("Got a message from user:", strings.TrimSpace(message))
 
 		// Parse user ID
 		userId, err := strconv.Atoi(strings.TrimSpace(message))
 		if err != nil {
 			log.Printf("Invalid user ID %s: %s", userId, err.Error())
 		}
-		//userId := strings.TrimSpace(message)
 
 		// Register user (map ID to connection)
 		ch <- User{userId, conn}
@@ -279,7 +277,7 @@ func processEvent(e *Event) {
 }
 
 func notifyUser(id int, message string) {
-	log.Printf("Notifying user %s with message %s", id, message)
+	//log.Printf("Notifying user %s with message %s", id, message)
 	// Get connection for user
 	if c, ok := users[id]; ok {
 		c.Write([]byte(message))
@@ -287,14 +285,14 @@ func notifyUser(id int, message string) {
 }
 
 func follow(from, to int) {
-	log.Printf("User %s follows %s", from, to)
+	//log.Printf("User %s follows %s", from, to)
 	fLock.Lock()
 	defer fLock.Unlock()
 	followers[to] = append(followers[to], from)
 }
 
 func unfollow(from, to int) {
-	log.Printf("User %s unfollows %s", from, to)
+	//log.Printf("User %s unfollows %s", from, to)
 	fLock.Lock()
 	defer fLock.Unlock()
 	for i := 0; i < len(followers[to]); i++ {
@@ -306,7 +304,7 @@ func unfollow(from, to int) {
 }
 
 func queueEvent(e *Event) {
-	log.Printf("Putting sequence %s in queue", e.Sequence)
+	//log.Printf("Putting sequence %s in queue", e.Sequence)
 	qLock.Lock()
 	defer qLock.Unlock()
 	queue[e.Sequence] = e
@@ -316,7 +314,7 @@ func processQueue() {
 	for {
 		qLock.RLock()
 		if e, ok := queue[lastSeq + 1]; ok {
-			log.Printf("Processing sequence %d", e.Sequence)
+			//log.Printf("Processing sequence %d", e.Sequence)
 			go processEvent(e)
 		}
 		qLock.RUnlock()
@@ -324,7 +322,7 @@ func processQueue() {
 }
 
 func deleteEvent(e *Event) {
-	log.Printf("Deleting sequence %s from queue", e.Sequence)
+	//log.Printf("Deleting sequence %s from queue", e.Sequence)
 	qLock.Lock()
 	defer qLock.Unlock()
 	delete(queue, e.Sequence)
