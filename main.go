@@ -128,7 +128,7 @@ func handleEvents(conn net.Conn) {
 }
 
 func handleClient(conn net.Conn, ch chan User) {
-	// TODO Keep connection open after receiving user ID (channels?)
+	// TODO Handle client disconnections?
 	// Close connection when done reading
 	defer func() {
 		//log.Printf("Closing client connection for %v...\n", &conn)
@@ -238,7 +238,6 @@ func processEvent(e *Event) {
 	case "U":
 		log.Println("processing Unfollow event")
 		unfollow(e.FromUserId, e.ToUserId)
-		notifyUser(e.ToUserId, constructEvent(e))
 	case "B":
 		log.Println("Processing broadcast event")
 		// Notify all users
