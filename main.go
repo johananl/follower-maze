@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -19,22 +20,22 @@ const (
 	userClientsPort = "9099"
 )
 
-var users = make(map[string]net.Conn)
+var users = make(map[int]net.Conn)
 
-var followers = make(map[string][]string)
+var followers = make(map[int][]int)
 var fLock = sync.RWMutex{}
 
 type User struct {
-	Id         string
+	Id         int
 	Connection net.Conn
 }
 
 type Event struct {
 	// TODO Restrict types
-	Sequence   string
+	Sequence   int
 	Type       string
-	FromUserId string
-	ToUserId   string
+	FromUserId int
+	ToUserId   int
 }
 
 func main() {
@@ -147,11 +148,11 @@ func handleClient(conn net.Conn, ch chan User) {
 		//log.Println("Got a message from user:", strings.TrimSpace(message))
 
 		// Parse user ID
-		//userId, err := strconv.Atoi(strings.TrimSpace(message))
-		//if err != nil {
-		//	log.Printf("Invalid user ID %s: %s", userId, err.Error())
-		//}
-		userId := strings.TrimSpace(message)
+		userId, err := strconv.Atoi(strings.TrimSpace(message))
+		if err != nil {
+			log.Printf("Invalid user ID %s: %s", userId, err.Error())
+		}
+		//userId := strings.TrimSpace(message)
 
 		// Register user (map ID to connection)
 		ch <- User{userId, conn}
@@ -171,41 +172,49 @@ func parseEvent(e string) (*Event, error) {
 	var result *Event
 
 	if m := fPattern.FindStringSubmatch(e); len(m) != 0 {
-		//log.Println("Message type is: Follow")
+		seq, _ := strconv.Atoi(m[1])
+		fuid, _ := strconv.Atoi(m[2])
+		tuid, _ := strconv.Atoi(m[3])
+
 		result = &Event{
-			Sequence:   m[1],
+			Sequence:   seq,
 			Type:       "F",
-			FromUserId: m[2],
-			ToUserId:   m[3],
+			FromUserId: fuid,
+			ToUserId:   tuid,
 		}
 	} else if m := uPattern.FindStringSubmatch(e); len(m) != 0 {
-		//log.Println("Message type is: Unfollow")
+		seq, _ := strconv.Atoi(m[1])
+		fuid, _ := strconv.Atoi(m[2])
+		tuid, _ := strconv.Atoi(m[3])
 		result = &Event{
-			Sequence:   m[1],
+			Sequence:   seq,
 			Type:       "U",
-			FromUserId: m[2],
-			ToUserId:   m[3],
+			FromUserId: fuid,
+			ToUserId:   tuid,
 		}
 	} else if m := bPattern.FindStringSubmatch(e); len(m) != 0 {
-		//log.Println("Message type is: Broadcast")
+		seq, _ := strconv.Atoi(m[1])
 		result = &Event{
-			Sequence: m[1],
+			Sequence: seq,
 			Type:     "B",
 		}
 	} else if m := pPattern.FindStringSubmatch(e); len(m) != 0 {
-		//log.Println("Message type is: PrivateMsg")
+		seq, _ := strconv.Atoi(m[1])
+		fuid, _ := strconv.Atoi(m[2])
+		tuid, _ := strconv.Atoi(m[3])
 		result = &Event{
-			Sequence:   m[1],
+			Sequence:   seq,
 			Type:       "P",
-			FromUserId: m[2],
-			ToUserId:   m[3],
+			FromUserId: fuid,
+			ToUserId:   tuid,
 		}
 	} else if m := sPattern.FindStringSubmatch(e); len(m) != 0 {
-		//log.Println("Message type is: StatusUpdate")
+		seq, _ := strconv.Atoi(m[1])
+		fuid, _ := strconv.Atoi(m[2])
 		result = &Event{
-			Sequence:   m[1],
+			Sequence:   seq,
 			Type:       "S",
-			FromUserId: m[2],
+			FromUserId: fuid,
 		}
 	} else {
 		return nil, errors.New("Invalid message: " + e)
@@ -259,23 +268,23 @@ func processEvent(e *Event) {
 	}
 }
 
-func notifyUser(id string, message string) {
-	//log.Printf("Notifying user %s with message %s", id, message)
+func notifyUser(id int, message string) {
+	log.Printf("Notifying user %s with message %s", id, message)
 	// Get connection for user
 	if c, ok := users[id]; ok {
 		c.Write([]byte(message))
 	}
 }
 
-func follow(from, to string) {
-	//log.Printf("User %s follows %s", from, to)
+func follow(from, to int) {
+	log.Printf("User %s follows %s", from, to)
 	fLock.Lock()
 	defer fLock.Unlock()
 	followers[to] = append(followers[to], from)
 }
 
-func unfollow(from, to string) {
-	//log.Printf("User %s unfollows %s", from, to)
+func unfollow(from, to int) {
+	log.Printf("User %s unfollows %s", from, to)
 	fLock.Lock()
 	defer fLock.Unlock()
 	for i := 0; i < len(followers[to]); i++ {
