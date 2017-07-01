@@ -232,11 +232,11 @@ func constructEvent(e *Event) string {
 
 	switch e.Type {
 	case "F", "U", "P":
-		result = fmt.Sprintf("%s|%s|%s|%s\n", e.Sequence, e.Type, e.FromUserId, e.ToUserId)
+		result = fmt.Sprintf("%d|%s|%d|%d\n", e.Sequence, e.Type, e.FromUserId, e.ToUserId)
 	case "B":
-		result = fmt.Sprintf("%s|%s\n", e.Sequence, e.Type)
+		result = fmt.Sprintf("%d|%s\n", e.Sequence, e.Type)
 	case "S":
-		result = fmt.Sprintf("%s|%s|%s\n", e.Sequence, e.Type, e.FromUserId)
+		result = fmt.Sprintf("%d|%s|%d\n", e.Sequence, e.Type, e.FromUserId)
 	}
 
 	return result
