@@ -10,6 +10,7 @@ import (
 	"strings"
 	"regexp"
 	"errors"
+	"sync"
 )
 
 const (
@@ -19,7 +20,9 @@ const (
 )
 
 var users = make(map[string]net.Conn)
+
 var followers = make(map[string][]string)
+var fLock = sync.RWMutex{}
 
 type User struct {
 	Id         string
@@ -247,6 +250,8 @@ func processEvent(e *Event) {
 		notifyUser(e.ToUserId, constructEvent(e))
 	case "S":
 		log.Println("Processing Status Update event")
+		fLock.RLock()
+		defer fLock.RUnlock()
 		for _, u := range followers[e.FromUserId] {
 			notifyUser(u, constructEvent(e))
 		}
@@ -265,19 +270,19 @@ func notifyUser(id string, message string) {
 
 func follow(from, to string) {
 	log.Printf("User %s follows %s", from, to)
-	//log.Printf("Current followers for %s: %s", to, followers[to])
+	fLock.Lock()
+	defer fLock.Unlock()
 	followers[to] = append(followers[to], from)
-	//log.Printf("New followers for %s: %s", to, followers[to])
 }
 
 func unfollow(from, to string) {
 	log.Printf("User %s unfollows %s", from, to)
-	log.Printf("Current followers for %s: %s", to, followers[to])
+	fLock.Lock()
+	defer fLock.Unlock()
 	for i := 0; i < len(followers[to]); i++ {
 		if followers[to][i] == from {
 			log.Printf("Found follower %s for user %s - removing", from, to)
 			followers[to] = append(followers[to][:i], followers[to][i+1:]...)
 		}
 	}
-	log.Printf("New followers for %s: %s", to, followers[to])
 }
