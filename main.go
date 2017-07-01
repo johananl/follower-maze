@@ -19,6 +19,7 @@ const (
 )
 
 var users = make(map[string]net.Conn)
+var followers = make(map[string][]string)
 
 type User struct {
 	Id         string
@@ -215,11 +216,11 @@ func constructEvent(e *Event) string {
 
 	switch e.Type {
 	case "F", "U", "P":
-		result = fmt.Sprintf("%s|%s|%s|%s", e.Sequence, e.Type, e.FromUserId, e.ToUserId)
+		result = fmt.Sprintf("%s|%s|%s|%s\n", e.Sequence, e.Type, e.FromUserId, e.ToUserId)
 	case "B":
-		result = fmt.Sprintf("%s|%s", e.Sequence, e.Type)
+		result = fmt.Sprintf("%s|%s\n", e.Sequence, e.Type)
 	case "S":
-		result = fmt.Sprintf("%s|%s|%s", e.Sequence, e.Type, e.FromUserId)
+		result = fmt.Sprintf("%s|%s|%s\n", e.Sequence, e.Type, e.FromUserId)
 	}
 
 	return result
@@ -229,9 +230,11 @@ func processEvent(e *Event) {
 	switch e.Type {
 	case "F":
 		log.Println("Processing Follow event")
+		follow(e.FromUserId, e.ToUserId)
 		notifyUser(e.ToUserId, constructEvent(e))
 	case "U":
 		log.Println("processing Unfollow event")
+		unfollow(e.FromUserId, e.ToUserId)
 		notifyUser(e.ToUserId, constructEvent(e))
 	case "B":
 		log.Println("Processing broadcast event")
@@ -244,6 +247,9 @@ func processEvent(e *Event) {
 		notifyUser(e.ToUserId, constructEvent(e))
 	case "S":
 		log.Println("Processing Status Update event")
+		for _, u := range followers[e.FromUserId] {
+			notifyUser(u, constructEvent(e))
+		}
 	default:
 		log.Println("Invalid event type - ignoring")
 	}
@@ -255,4 +261,23 @@ func notifyUser(id string, message string) {
 	if c, ok := users[id]; ok {
 		c.Write([]byte(message))
 	}
+}
+
+func follow(from, to string) {
+	log.Printf("User %s follows %s", from, to)
+	//log.Printf("Current followers for %s: %s", to, followers[to])
+	followers[to] = append(followers[to], from)
+	//log.Printf("New followers for %s: %s", to, followers[to])
+}
+
+func unfollow(from, to string) {
+	log.Printf("User %s unfollows %s", from, to)
+	log.Printf("Current followers for %s: %s", to, followers[to])
+	for i := 0; i < len(followers[to]); i++ {
+		if followers[to][i] == from {
+			log.Printf("Found follower %s for user %s - removing", from, to)
+			followers[to] = append(followers[to][:i], followers[to][i+1:]...)
+		}
+	}
+	log.Printf("New followers for %s: %s", to, followers[to])
 }
