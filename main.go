@@ -148,8 +148,9 @@ func handleClient(conn net.Conn, ch chan User) {
 	// Continually read from connection
 	// This loop iterates every time a newline-delimited string is read from
 	// the TCP connection. every time
+	br := bufio.NewReader(conn)
 	for {
-		message, err := bufio.NewReader(conn).ReadString('\n')
+		message, err := br.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
 				break
