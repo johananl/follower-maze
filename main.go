@@ -147,7 +147,7 @@ func handleEvents(conn net.Conn) {
 
 		log.Println("Received event:", strings.TrimSpace(message))
 		totalReceived++
-		go processEvent(event)
+		processEvent(event)
 		//go queueEvent(event)
 	}
 }
