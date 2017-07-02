@@ -19,7 +19,7 @@ var fLock = sync.RWMutex{}
 
 func main() {
 	// Initialize logging
-	f, err := os.OpenFile("follower-maze.log", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	f, err := os.OpenFile(fmt.Sprintf("%s.log", os.Args[0]), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		log.Println("Cannot open log file:", err)
 	}
