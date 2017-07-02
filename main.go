@@ -42,6 +42,16 @@ type Event struct {
 }
 
 func main() {
+	// Initialize logging
+	f, err := os.OpenFile("follower-maze.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Println("Cannot open log file:", err)
+	}
+	defer f.Close()
+
+	mw := io.MultiWriter(os.Stdout, f)
+	log.SetOutput(mw)
+
 	// Initialize event source listener
 	es, err := net.Listen("tcp", host+":"+eventSourcePort)
 	if err != nil {
