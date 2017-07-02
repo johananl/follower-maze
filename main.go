@@ -43,7 +43,7 @@ type Event struct {
 
 func main() {
 	// Initialize logging
-	f, err := os.OpenFile("follower-maze.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	f, err := os.OpenFile("follower-maze.log", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		log.Println("Cannot open log file:", err)
 	}
