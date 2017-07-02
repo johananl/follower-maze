@@ -51,6 +51,7 @@ func main() {
 
 	mw := io.MultiWriter(os.Stdout, f)
 	log.SetOutput(mw)
+	log.SetFlags(log.Lshortfile | log.Lmicroseconds)
 
 	// Initialize event source listener
 	es, err := net.Listen("tcp", host+":"+eventSourcePort)
@@ -114,9 +115,12 @@ func acceptClients(l net.Listener) {
 }
 
 func handleEvents(conn net.Conn) {
+	totalReceived := 0
+
 	// Close connection when done reading
 	defer func() {
 		log.Println("Closing event connection...")
+		log.Println("Total events received:", totalReceived)
 		conn.Close()
 	}()
 
@@ -141,6 +145,8 @@ func handleEvents(conn net.Conn) {
 			continue
 		}
 
+		log.Println("Received event:", strings.TrimSpace(message))
+		totalReceived++
 		go processEvent(event)
 		//go queueEvent(event)
 	}
@@ -292,7 +298,7 @@ func processEvent(e *Event) {
 }
 
 func notifyUser(id int, message string) {
-	//log.Printf("Notifying user %s with message %s", id, message)
+	log.Printf("Notifying user %d with message %s", id, message)
 	// Get connection for user
 	if c, ok := users[id]; ok {
 		c.Write([]byte(message))
@@ -300,14 +306,14 @@ func notifyUser(id int, message string) {
 }
 
 func follow(from, to int) {
-	//log.Printf("User %s follows %s", from, to)
+	log.Printf("User %d follows %d", from, to)
 	fLock.Lock()
 	defer fLock.Unlock()
 	followers[to] = append(followers[to], from)
 }
 
 func unfollow(from, to int) {
-	//log.Printf("User %s unfollows %s", from, to)
+	log.Printf("User %d unfollows %d", from, to)
 	fLock.Lock()
 	defer fLock.Unlock()
 	for i := 0; i < len(followers[to]); i++ {
