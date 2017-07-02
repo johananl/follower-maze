@@ -35,7 +35,6 @@ type User struct {
 }
 
 type Event struct {
-	// TODO Restrict types
 	Sequence   int
 	Type       string
 	FromUserId int
