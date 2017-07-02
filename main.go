@@ -49,8 +49,9 @@ func main() {
 	}
 	defer f.Close()
 
-	mw := io.MultiWriter(os.Stdout, f)
-	log.SetOutput(mw)
+	//mw := io.MultiWriter(os.Stdout, f)
+	//log.SetOutput(mw)
+	log.SetOutput(f)
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds)
 
 	// Initialize event source listener
