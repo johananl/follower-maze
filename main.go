@@ -8,6 +8,8 @@ import (
 	"sync"
 )
 
+// TODO Handle connection termination gracefully.
+
 const (
 	host            = "localhost"
 	eventSourcePort = "9090"
