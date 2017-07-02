@@ -319,7 +319,7 @@ func queueEvent(e *Event) {
 func processQueue() {
 	for {
 		qLock.RLock()
-		if e, ok := queue[lastSeq + 1]; ok {
+		if e, ok := queue[lastSeq+1]; ok {
 			//log.Printf("Processing sequence %d", e.Sequence)
 			go processEvent(e)
 		}
