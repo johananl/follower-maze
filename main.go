@@ -68,7 +68,7 @@ func main() {
 	log.Println("Listening for user clients on " + host + ":" + userClientsPort)
 
 	// Handle requests concurrently
-	go processQueue()
+	//go processQueue()
 	go acceptEvents(es)
 	go acceptClients(uc)
 
@@ -129,8 +129,8 @@ func handleEvents(conn net.Conn) {
 			continue
 		}
 
-		//go processEvent(event)
-		go queueEvent(event)
+		go processEvent(event)
+		//go queueEvent(event)
 	}
 }
 
@@ -273,7 +273,7 @@ func processEvent(e *Event) {
 	}
 
 	// TODO Verify success before removing event
-	deleteEvent(e)
+	//deleteEvent(e)
 }
 
 func notifyUser(id int, message string) {
