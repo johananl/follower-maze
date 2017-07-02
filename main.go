@@ -337,7 +337,7 @@ func processQueue() {
 		qLock.RLock()
 		if e, ok := queue[lastSeq+1]; ok {
 			//log.Printf("Processing sequence %d", e.Sequence)
-			go processEvent(e)
+			go processEvent(e) // Should probably be synchronous
 		}
 		qLock.RUnlock()
 	}
