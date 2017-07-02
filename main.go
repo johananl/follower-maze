@@ -78,6 +78,7 @@ func main() {
 
 func acceptEvents(l net.Listener) {
 	// Continually accept event connections
+	// This loop iterates every time a new events connection is made.
 	for {
 		c, err := l.Accept()
 		if err != nil {
@@ -98,7 +99,7 @@ func acceptClients(l net.Listener) {
 
 		ch := make(chan User)
 		go handleClient(c, ch)
-		user := <-ch
+		user := <-ch // Blocks until handleClient() returns a User
 		users[user.Id] = user.Connection
 	}
 }
@@ -112,6 +113,8 @@ func handleEvents(conn net.Conn) {
 
 	// Continually read from connection
 	br := bufio.NewReader(conn)
+	// This loop iterates every time a newline-delimited string is read from
+	// the TCP connection.
 	for {
 		message, err := br.ReadString('\n')
 		if err != nil {
@@ -143,6 +146,8 @@ func handleClient(conn net.Conn, ch chan User) {
 	}()
 
 	// Continually read from connection
+	// This loop iterates every time a newline-delimited string is read from
+	// the TCP connection. every time
 	for {
 		message, err := bufio.NewReader(conn).ReadString('\n')
 		if err != nil {
