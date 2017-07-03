@@ -38,7 +38,7 @@ func handleClient(conn net.Conn, ch chan User) {
 	// TODO Handle client disconnections?
 	// Close connection when done reading
 	defer func() {
-		//log.Printf("Closing client connection for %v...\n", &conn)
+		log.Printf("Closing client connection for %v...\n", &conn)
 		conn.Close()
 	}()
 
