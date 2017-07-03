@@ -10,8 +10,8 @@ import (
 )
 
 type User struct {
-	Id         int
-	Connection net.Conn
+	id         int
+	connection net.Conn
 }
 
 // TODO Rename users var to avoid confusion
@@ -30,7 +30,7 @@ func acceptClients(l net.Listener) {
 		ch := make(chan User)
 		go handleClient(c, ch)
 		user := <-ch // Blocks until handleClient() returns a User
-		users[user.Id] = user.Connection
+		users[user.id] = user.connection
 	}
 }
 
