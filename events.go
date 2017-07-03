@@ -75,6 +75,7 @@ func handleEvents(conn net.Conn) {
 func parseEvent(e string) (*Event, error) {
 	//log.Printf("Parsing event %s", e)
 
+	// TODO Get rid of regex matching and handle string manually?
 	fPattern := regexp.MustCompile(`^(\d+)\|F\|(\d+)\|(\d+)$`)
 	uPattern := regexp.MustCompile(`^(\d+)\|U\|(\d+)\|(\d+)$`)
 	bPattern := regexp.MustCompile(`^(\d+)\|B$`)
@@ -147,6 +148,7 @@ func processEvent(e *Event) {
 	case "B":
 		//log.Println("Processing broadcast event")
 		// Notify all users
+		// Block only "sender" object until end of broadcast processing (block getting next event from queue)
 		for u, _ := range users {
 			notifyUser(u, constructEvent(e))
 		}
@@ -169,6 +171,7 @@ func processEvent(e *Event) {
 	//deleteEvent(e)
 }
 
+// TODO Cancel this function and instead keep original "message" as a field under Event
 func constructEvent(e *Event) string {
 	var result string
 

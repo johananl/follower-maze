@@ -14,6 +14,7 @@ type User struct {
 	Connection net.Conn
 }
 
+// TODO Rename users var to avoid confusion
 var users = make(map[int]net.Conn)
 
 func acceptClients(l net.Listener) {
@@ -25,6 +26,7 @@ func acceptClients(l net.Listener) {
 			continue
 		}
 
+		// TODO Do we need channels here? Maybe better to run synchronously and return
 		ch := make(chan User)
 		go handleClient(c, ch)
 		user := <-ch // Blocks until handleClient() returns a User
@@ -85,6 +87,7 @@ func unfollow(from, to int) {
 	log.Printf("User %d unfollows %d", from, to)
 	fLock.Lock()
 	defer fLock.Unlock()
+	// TODO If performance for array lookup is too expensive, use a sorted array + binary search
 	for i := 0; i < len(followers[to]); i++ {
 		if followers[to][i] == from {
 			//log.Printf("Found follower %s for user %s - removing", from, to)
