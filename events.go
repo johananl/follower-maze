@@ -13,10 +13,10 @@ import (
 )
 
 type Event struct {
-	Sequence   int
-	Type       string
-	FromUserId int
-	ToUserId   int
+	sequence   int
+	eventType  string
+	fromUserId int
+	toUserId   int
 }
 
 func acceptEvents(l net.Listener) {
@@ -90,44 +90,44 @@ func parseEvent(e string) (*Event, error) {
 		tuid, _ := strconv.Atoi(m[3])
 
 		result = &Event{
-			Sequence:   seq,
-			Type:       "F",
-			FromUserId: fuid,
-			ToUserId:   tuid,
+			sequence:   seq,
+			eventType:  "F",
+			fromUserId: fuid,
+			toUserId:   tuid,
 		}
 	} else if m := uPattern.FindStringSubmatch(e); len(m) != 0 {
 		seq, _ := strconv.Atoi(m[1])
 		fuid, _ := strconv.Atoi(m[2])
 		tuid, _ := strconv.Atoi(m[3])
 		result = &Event{
-			Sequence:   seq,
-			Type:       "U",
-			FromUserId: fuid,
-			ToUserId:   tuid,
+			sequence:   seq,
+			eventType:  "U",
+			fromUserId: fuid,
+			toUserId:   tuid,
 		}
 	} else if m := bPattern.FindStringSubmatch(e); len(m) != 0 {
 		seq, _ := strconv.Atoi(m[1])
 		result = &Event{
-			Sequence: seq,
-			Type:     "B",
+			sequence:  seq,
+			eventType: "B",
 		}
 	} else if m := pPattern.FindStringSubmatch(e); len(m) != 0 {
 		seq, _ := strconv.Atoi(m[1])
 		fuid, _ := strconv.Atoi(m[2])
 		tuid, _ := strconv.Atoi(m[3])
 		result = &Event{
-			Sequence:   seq,
-			Type:       "P",
-			FromUserId: fuid,
-			ToUserId:   tuid,
+			sequence:   seq,
+			eventType:  "P",
+			fromUserId: fuid,
+			toUserId:   tuid,
 		}
 	} else if m := sPattern.FindStringSubmatch(e); len(m) != 0 {
 		seq, _ := strconv.Atoi(m[1])
 		fuid, _ := strconv.Atoi(m[2])
 		result = &Event{
-			Sequence:   seq,
-			Type:       "S",
-			FromUserId: fuid,
+			sequence:   seq,
+			eventType:  "S",
+			fromUserId: fuid,
 		}
 	} else {
 		return nil, errors.New("Invalid message: " + e)
@@ -137,14 +137,14 @@ func parseEvent(e string) (*Event, error) {
 }
 
 func processEvent(e *Event) {
-	switch e.Type {
+	switch e.eventType {
 	case "F":
 		//log.Println("Processing Follow event")
-		follow(e.FromUserId, e.ToUserId)
-		notifyUser(e.ToUserId, constructEvent(e))
+		follow(e.fromUserId, e.toUserId)
+		notifyUser(e.toUserId, constructEvent(e))
 	case "U":
 		//log.Println("Processing Unfollow event")
-		unfollow(e.FromUserId, e.ToUserId)
+		unfollow(e.fromUserId, e.toUserId)
 	case "B":
 		//log.Println("Processing broadcast event")
 		// Notify all users
@@ -154,12 +154,12 @@ func processEvent(e *Event) {
 		}
 	case "P":
 		//log.Println("Processing Private Msg event")
-		notifyUser(e.ToUserId, constructEvent(e))
+		notifyUser(e.toUserId, constructEvent(e))
 	case "S":
 		//log.Println("Processing Status Update event")
 		fLock.RLock()
 		defer fLock.RUnlock()
-		for _, u := range followers[e.FromUserId] {
+		for _, u := range followers[e.fromUserId] {
 			notifyUser(u, constructEvent(e))
 		}
 	default:
@@ -175,13 +175,13 @@ func processEvent(e *Event) {
 func constructEvent(e *Event) string {
 	var result string
 
-	switch e.Type {
+	switch e.eventType {
 	case "F", "U", "P":
-		result = fmt.Sprintf("%d|%s|%d|%d\n", e.Sequence, e.Type, e.FromUserId, e.ToUserId)
+		result = fmt.Sprintf("%d|%s|%d|%d\n", e.sequence, e.eventType, e.fromUserId, e.toUserId)
 	case "B":
-		result = fmt.Sprintf("%d|%s\n", e.Sequence, e.Type)
+		result = fmt.Sprintf("%d|%s\n", e.sequence, e.eventType)
 	case "S":
-		result = fmt.Sprintf("%d|%s|%d\n", e.Sequence, e.Type, e.FromUserId)
+		result = fmt.Sprintf("%d|%s|%d\n", e.sequence, e.eventType, e.fromUserId)
 	}
 
 	return result
