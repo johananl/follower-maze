@@ -135,21 +135,6 @@ func parseEvent(e string) (*Event, error) {
 	return result, nil
 }
 
-func constructEvent(e *Event) string {
-	var result string
-
-	switch e.Type {
-	case "F", "U", "P":
-		result = fmt.Sprintf("%d|%s|%d|%d\n", e.Sequence, e.Type, e.FromUserId, e.ToUserId)
-	case "B":
-		result = fmt.Sprintf("%d|%s\n", e.Sequence, e.Type)
-	case "S":
-		result = fmt.Sprintf("%d|%s|%d\n", e.Sequence, e.Type, e.FromUserId)
-	}
-
-	return result
-}
-
 func processEvent(e *Event) {
 	switch e.Type {
 	case "F":
@@ -182,4 +167,19 @@ func processEvent(e *Event) {
 
 	// TODO Verify success before removing event
 	//deleteEvent(e)
+}
+
+func constructEvent(e *Event) string {
+	var result string
+
+	switch e.Type {
+	case "F", "U", "P":
+		result = fmt.Sprintf("%d|%s|%d|%d\n", e.Sequence, e.Type, e.FromUserId, e.ToUserId)
+	case "B":
+		result = fmt.Sprintf("%d|%s\n", e.Sequence, e.Type)
+	case "S":
+		result = fmt.Sprintf("%d|%s|%d\n", e.Sequence, e.Type, e.FromUserId)
+	}
+
+	return result
 }
