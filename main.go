@@ -1,6 +1,7 @@
 package main
 
 import (
+	"container/heap"
 	"fmt"
 	"log"
 	"net"
@@ -56,9 +57,17 @@ func main() {
 	}()
 	log.Println("Listening for user clients on " + host + ":" + userClientsPort)
 
+	// Initialize an empty event queue
+	pq := make(PriorityQueue, 0)
+	log.Println("Queue address:", &pq)
+	heap.Init(&pq)
+
+	// Initialize the event handler
+	eh := EventHandler{queue: &pq}
+
 	// Handle requests concurrently
 	//go processQueue()
-	go acceptEvents(es)
+	go eh.acceptEvents(es)
 	go acceptClients(uc)
 
 	// Block main goroutine

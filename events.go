@@ -17,9 +17,14 @@ type Event struct {
 	eventType  string
 	fromUserId int
 	toUserId   int
+	index      int // Used for ordering in a priority queue
 }
 
-func acceptEvents(l net.Listener) {
+type EventHandler struct {
+	queue *PriorityQueue
+}
+
+func (eh EventHandler) acceptEvents(l net.Listener) {
 	// Continually accept event connections
 	// This loop iterates every time a new events connection is made.
 	for {
@@ -29,17 +34,19 @@ func acceptEvents(l net.Listener) {
 			continue
 		}
 
-		go handleEvents(c)
+		go eh.handleEvents(c)
 	}
 }
 
-func handleEvents(conn net.Conn) {
+func (eh EventHandler) handleEvents(conn net.Conn) {
 	totalReceived := 0
 
 	// Close connection when done reading
 	defer func() {
 		log.Println("Closing event connection...")
 		log.Println("Total events received:", totalReceived)
+		log.Println("Flushing queue...")
+		eh.flushQueue(eh.queue)
 		conn.Close()
 	}()
 
@@ -58,7 +65,7 @@ func handleEvents(conn net.Conn) {
 			continue
 		}
 
-		event, err := parseEvent(strings.TrimSpace(message))
+		event, err := eh.parseEvent(strings.TrimSpace(message))
 		if err != nil {
 			log.Println("Event parsing failed:", err)
 			continue
@@ -66,13 +73,21 @@ func handleEvents(conn net.Conn) {
 
 		log.Println("Received event:", strings.TrimSpace(message))
 		totalReceived++
-		processEvent(event)
-		//go queueEvent(event)
+		//processEvent(event)
+
+		eh.queue.queueEvent(event)
+		//heap.Push(eh.queue, event)
+		log.Printf("Queue length: %d", eh.queue.Len())
+		// If we have enough events in the queue, process the first event.
+		if eh.queue.Len() > eventQueueSize {
+			log.Println("Got enough events in the queue - processing")
+			eh.processEvent(eh.queue.popEvent())
+		}
 	}
 }
 
 // parseEvent gets a string and returns an Event or an error if it cannot parse.
-func parseEvent(e string) (*Event, error) {
+func (eh EventHandler) parseEvent(e string) (*Event, error) {
 	//log.Printf("Parsing event %s", e)
 
 	// TODO Get rid of regex matching and handle string manually?
@@ -136,12 +151,12 @@ func parseEvent(e string) (*Event, error) {
 	return result, nil
 }
 
-func processEvent(e *Event) {
+func (eh EventHandler) processEvent(e *Event) {
 	switch e.eventType {
 	case "F":
 		//log.Println("Processing Follow event")
 		follow(e.fromUserId, e.toUserId)
-		notifyUser(e.toUserId, constructEvent(e))
+		notifyUser(e.toUserId, eh.constructEvent(e))
 	case "U":
 		//log.Println("Processing Unfollow event")
 		unfollow(e.fromUserId, e.toUserId)
@@ -150,17 +165,17 @@ func processEvent(e *Event) {
 		// Notify all users
 		// Block only "sender" object until end of broadcast processing (block getting next event from queue)
 		for u, _ := range users {
-			notifyUser(u, constructEvent(e))
+			notifyUser(u, eh.constructEvent(e))
 		}
 	case "P":
 		//log.Println("Processing Private Msg event")
-		notifyUser(e.toUserId, constructEvent(e))
+		notifyUser(e.toUserId, eh.constructEvent(e))
 	case "S":
 		//log.Println("Processing Status Update event")
 		fLock.RLock()
 		defer fLock.RUnlock()
 		for _, u := range followers[e.fromUserId] {
-			notifyUser(u, constructEvent(e))
+			notifyUser(u, eh.constructEvent(e))
 		}
 	default:
 		log.Println("Invalid event type - ignoring")
@@ -172,7 +187,7 @@ func processEvent(e *Event) {
 }
 
 // TODO Cancel this function and instead keep original "message" as a field under Event
-func constructEvent(e *Event) string {
+func (eh EventHandler) constructEvent(e *Event) string {
 	var result string
 
 	switch e.eventType {
@@ -185,4 +200,13 @@ func constructEvent(e *Event) string {
 	}
 
 	return result
+}
+
+// flushQueue empties the queue by processing all remaining messages.
+// This method is called once the event source connection is closed.
+// TODO Flush after a timeout? Dead timeout at event source?
+func (eh EventHandler) flushQueue(q *PriorityQueue) {
+	for q.Len() > 0 {
+		eh.processEvent(q.popEvent())
+	}
 }
