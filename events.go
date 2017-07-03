@@ -26,6 +26,7 @@ func acceptEvents(l net.Listener) {
 		c, err := l.Accept()
 		if err != nil {
 			log.Println("Error accepting:", err.Error())
+			continue
 		}
 
 		go handleEvents(c)

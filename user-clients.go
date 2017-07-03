@@ -22,6 +22,7 @@ func acceptClients(l net.Listener) {
 		c, err := l.Accept()
 		if err != nil {
 			log.Println("Error accepting:", err.Error())
+			continue
 		}
 
 		ch := make(chan User)
@@ -50,12 +51,14 @@ func handleClient(conn net.Conn, ch chan User) {
 				break
 			}
 			log.Println("Error reading client request:", err.Error())
+			continue
 		}
 
 		// Parse user ID
 		userId, err := strconv.Atoi(strings.TrimSpace(message))
 		if err != nil {
 			log.Printf("Invalid user ID %s: %s", userId, err.Error())
+			continue
 		}
 
 		// Register user (map ID to connection)
