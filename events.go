@@ -72,13 +72,13 @@ func (eh EventHandler) handleEvents(conn net.Conn) {
 			continue
 		}
 
-		log.Println("Received event:", strings.TrimSpace(message))
+		//log.Println("Received event:", strings.TrimSpace(message))
 		totalReceived++
 
 		eh.queueManager.queueEvent(event)
 		// If we have enough events in the queue, process the first event.
 		if eh.queueManager.queue.Len() > eventQueueSize {
-			log.Println("Got enough events in the queue - processing")
+			//log.Println("Got enough events in the queue - processing")
 			eh.processEvent(eh.queueManager.popEvent())
 		}
 	}

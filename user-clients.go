@@ -39,7 +39,7 @@ func (uh UserHandler) handleUser(conn net.Conn, ch chan User) {
 	// TODO Handle client disconnections?
 	// Close connection when done reading
 	defer func() {
-		log.Printf("Closing client connection for %v...\n", &conn)
+		log.Printf("Closing client connection at %v...\n", &conn)
 		conn.Close()
 	}()
 
@@ -70,7 +70,7 @@ func (uh UserHandler) handleUser(conn net.Conn, ch chan User) {
 }
 
 func (uh UserHandler) notifyUser(id int, message string) {
-	log.Printf("Notifying user %d with message %s", id, message)
+	//log.Printf("Notifying user %d with message %s", id, message)
 	// Get connection for user
 	if c, ok := uh.users[id]; ok {
 		c.Write([]byte(message))
@@ -78,14 +78,14 @@ func (uh UserHandler) notifyUser(id int, message string) {
 }
 
 func (uh UserHandler) follow(from, to int) {
-	log.Printf("User %d follows %d", from, to)
+	//log.Printf("User %d follows %d", from, to)
 	fLock.Lock()
 	defer fLock.Unlock()
 	followers[to] = append(followers[to], from)
 }
 
 func (uh UserHandler) unfollow(from, to int) {
-	log.Printf("User %d unfollows %d", from, to)
+	//log.Printf("User %d unfollows %d", from, to)
 	fLock.Lock()
 	defer fLock.Unlock()
 	// TODO If performance for array lookup is too expensive, use a sorted array + binary search.
