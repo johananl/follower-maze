@@ -178,9 +178,6 @@ func (eh EventHandler) processEvent(e *Event) {
 		log.Println("Invalid event type - ignoring")
 		return
 	}
-
-	// TODO Verify success before removing event
-	//deleteEvent(e)
 }
 
 // TODO Cancel this function and instead keep original "message" as a field under Event
