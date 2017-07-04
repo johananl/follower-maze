@@ -45,6 +45,7 @@ func (eh EventHandler) acceptEvents(l net.Listener) {
 }
 
 func (eh EventHandler) handleEvents(conn net.Conn) {
+	// Total valid events received from the connection
 	totalReceived := 0
 
 	// Close connection when done reading
