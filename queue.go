@@ -51,12 +51,14 @@ func (pq *PriorityQueue) update(e *Event, et string, seq int) {
 var qLock = sync.RWMutex{}
 
 func (pq *PriorityQueue) queueEvent(e *Event) {
+	// TODO Do we need the mutex here?
 	qLock.Lock()
 	defer qLock.Unlock()
 	heap.Push(pq, e)
 }
 
 func (pq *PriorityQueue) popEvent() *Event {
+	// TODO Do we need the mutex here?
 	qLock.RLock()
 	defer qLock.RUnlock()
 	return heap.Pop(pq).(*Event)
