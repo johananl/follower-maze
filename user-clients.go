@@ -30,7 +30,7 @@ func (uh UserHandler) acceptUsers(l net.Listener) {
 			continue
 		}
 
-		// TODO Do we need channels here? Maybe better to run synchronously and return
+		// TODO Do we need channels here? Maybe using a mutex is simpler.
 		ch := make(chan User)
 		go uh.handleUser(c, ch)
 		user := <-ch // Blocks until handleUser() returns a User
