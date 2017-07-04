@@ -171,7 +171,6 @@ func (eh EventHandler) processEvent(e *Event) {
 		eh.userHandler.notifyUser(e.toUserId, eh.constructEvent(e))
 	case "S":
 		//log.Println("Processing Status Update event")
-		//fLock.RLock()
 		eh.userHandler.lock.RLock()
 		defer eh.userHandler.lock.RUnlock()
 		for _, u := range eh.userHandler.followers[e.fromUserId] {
