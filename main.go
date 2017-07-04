@@ -5,7 +5,6 @@ import (
 	"log"
 	"net"
 	"os"
-	"sync"
 )
 
 // TODO Handle connection termination gracefully.
@@ -15,9 +14,6 @@ const (
 	eventSourcePort = "9090"
 	userClientsPort = "9099"
 )
-
-var followers = make(map[int][]int)
-var fLock = sync.RWMutex{}
 
 func main() {
 	// Initialize logging

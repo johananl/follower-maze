@@ -7,6 +7,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type User struct {
@@ -16,6 +17,8 @@ type User struct {
 
 type UserHandler struct {
 	users map[int]net.Conn
+	followers map[int][]int
+	lock sync.RWMutex
 }
 
 func (uh UserHandler) acceptUsers(l net.Listener) {
@@ -79,24 +82,27 @@ func (uh UserHandler) notifyUser(id int, message string) {
 
 func (uh UserHandler) follow(from, to int) {
 	//log.Printf("User %d follows %d", from, to)
-	fLock.Lock()
-	defer fLock.Unlock()
-	followers[to] = append(followers[to], from)
+	uh.lock.Lock()
+	defer uh.lock.Unlock()
+	uh.followers[to] = append(uh.followers[to], from)
 }
 
 func (uh UserHandler) unfollow(from, to int) {
 	//log.Printf("User %d unfollows %d", from, to)
-	fLock.Lock()
-	defer fLock.Unlock()
+	uh.lock.Lock()
+	defer uh.lock.Unlock()
 	// TODO If performance for array lookup is too expensive, use a sorted array + binary search.
-	for i := 0; i < len(followers[to]); i++ {
-		if followers[to][i] == from {
+	for i := 0; i < len(uh.followers[to]); i++ {
+		if uh.followers[to][i] == from {
 			//log.Printf("Found follower %s for user %s - removing", from, to)
-			followers[to] = append(followers[to][:i], followers[to][i+1:]...)
+			uh.followers[to] = append(uh.followers[to][:i], uh.followers[to][i+1:]...)
 		}
 	}
 }
 
 func NewUserHandler() *UserHandler {
-	return &UserHandler{users: make(map[int]net.Conn)}
+	return &UserHandler{
+		users: make(map[int]net.Conn),
+		followers: make(map[int][]int),
+	}
 }
