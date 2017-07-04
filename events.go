@@ -35,6 +35,11 @@ func (eh EventHandler) acceptEvents(l net.Listener) {
 			continue
 		}
 
+		// We could actually block here since we're handling only one
+		// event source, however executing handleEvents() as a
+		// separate goroutine provides automatic support for multiple
+		// event sources concurrently, should this become a requirement
+		// in the future.
 		go eh.handleEvents(c)
 	}
 }
