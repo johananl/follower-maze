@@ -5,9 +5,12 @@ import (
 	"sync"
 )
 
-const (
-	eventQueueSize = 200
-)
+// eventQueueSize has to be equal to or larger than the max batch
+// size used by the event source. With a max batch size of 100, a
+// queue size of 100 should suffice to avoid ordering problems.
+// However, a larger queue size was used here as a safety measure
+// since the performance impact (event delivery delay) is trivial.
+const eventQueueSize = 200
 
 // PriorityQueue implements heap.Interface and holds Events.
 type PriorityQueue []*Event
@@ -51,7 +54,7 @@ func (pq *PriorityQueue) update(e *Event, et string, seq int) {
 // implemented using a heap for event ordering.
 type QueueManager struct {
 	queue *PriorityQueue
-	lock sync.RWMutex
+	lock  sync.RWMutex
 }
 
 func (qm QueueManager) queueEvent(e *Event) {
@@ -72,7 +75,7 @@ func NewQueueManager() *QueueManager {
 	pq := make(PriorityQueue, 0)
 	qm := QueueManager{
 		queue: &pq,
-		lock: sync.RWMutex{},
+		lock:  sync.RWMutex{},
 	}
 	heap.Init(qm.queue)
 
