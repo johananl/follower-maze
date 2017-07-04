@@ -21,7 +21,8 @@ type Event struct {
 }
 
 type EventHandler struct {
-	queue *PriorityQueue
+	queueManager *QueueManager
+	userHandler *UserHandler
 }
 
 func (eh EventHandler) acceptEvents(l net.Listener) {
@@ -46,7 +47,7 @@ func (eh EventHandler) handleEvents(conn net.Conn) {
 		log.Println("Closing event connection...")
 		log.Println("Total events received:", totalReceived)
 		log.Println("Flushing queue...")
-		eh.flushQueue(eh.queue)
+		eh.flushQueue(eh.queueManager)
 		conn.Close()
 	}()
 
@@ -74,11 +75,11 @@ func (eh EventHandler) handleEvents(conn net.Conn) {
 		log.Println("Received event:", strings.TrimSpace(message))
 		totalReceived++
 
-		eh.queue.queueEvent(event)
+		eh.queueManager.queueEvent(event)
 		// If we have enough events in the queue, process the first event.
-		if eh.queue.Len() > eventQueueSize {
+		if eh.queueManager.queue.Len() > eventQueueSize {
 			log.Println("Got enough events in the queue - processing")
-			eh.processEvent(eh.queue.popEvent())
+			eh.processEvent(eh.queueManager.popEvent())
 		}
 	}
 }
@@ -152,27 +153,28 @@ func (eh EventHandler) processEvent(e *Event) {
 	switch e.eventType {
 	case "F":
 		//log.Println("Processing Follow event")
-		follow(e.fromUserId, e.toUserId)
-		notifyUser(e.toUserId, eh.constructEvent(e))
+		eh.userHandler.follow(e.fromUserId, e.toUserId)
+		eh.userHandler.notifyUser(e.toUserId, eh.constructEvent(e))
 	case "U":
 		//log.Println("Processing Unfollow event")
-		unfollow(e.fromUserId, e.toUserId)
+		eh.userHandler.unfollow(e.fromUserId, e.toUserId)
 	case "B":
 		//log.Println("Processing broadcast event")
 		// Notify all users
 		// Block only "sender" object until end of broadcast processing (block getting next event from queue)
-		for u, _ := range users {
-			notifyUser(u, eh.constructEvent(e))
+		// TODO Do we need the blank identifier here?
+		for u, _ := range eh.userHandler.users {
+			eh.userHandler.notifyUser(u, eh.constructEvent(e))
 		}
 	case "P":
 		//log.Println("Processing Private Msg event")
-		notifyUser(e.toUserId, eh.constructEvent(e))
+		eh.userHandler.notifyUser(e.toUserId, eh.constructEvent(e))
 	case "S":
 		//log.Println("Processing Status Update event")
 		fLock.RLock()
 		defer fLock.RUnlock()
 		for _, u := range followers[e.fromUserId] {
-			notifyUser(u, eh.constructEvent(e))
+			eh.userHandler.notifyUser(u, eh.constructEvent(e))
 		}
 	default:
 		log.Println("Invalid event type - ignoring")
@@ -199,8 +201,12 @@ func (eh EventHandler) constructEvent(e *Event) string {
 // flushQueue empties the queue by processing all remaining messages.
 // This method is called once the event source connection is closed.
 // TODO Flush after a timeout? Dead timeout at event source?
-func (eh EventHandler) flushQueue(q *PriorityQueue) {
-	for q.Len() > 0 {
-		eh.processEvent(q.popEvent())
+func (eh EventHandler) flushQueue(qm *QueueManager) {
+	for qm.queue.Len() > 0 {
+		eh.processEvent(qm.popEvent())
 	}
+}
+
+func NewEventHandler(qm *QueueManager, uh *UserHandler) *EventHandler {
+	return &EventHandler{qm, uh}
 }

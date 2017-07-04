@@ -14,10 +14,11 @@ type User struct {
 	connection net.Conn
 }
 
-// TODO Rename users var to avoid confusion
-var users = make(map[int]net.Conn)
+type UserHandler struct {
+	users map[int]net.Conn
+}
 
-func acceptClients(l net.Listener) {
+func (uh UserHandler) acceptUsers(l net.Listener) {
 	// Continually accept client connections
 	for {
 		c, err := l.Accept()
@@ -28,13 +29,13 @@ func acceptClients(l net.Listener) {
 
 		// TODO Do we need channels here? Maybe better to run synchronously and return
 		ch := make(chan User)
-		go handleClient(c, ch)
-		user := <-ch // Blocks until handleClient() returns a User
-		users[user.id] = user.connection
+		go uh.handleUser(c, ch)
+		user := <-ch // Blocks until handleUser() returns a User
+		uh.users[user.id] = user.connection
 	}
 }
 
-func handleClient(conn net.Conn, ch chan User) {
+func (uh UserHandler) handleUser(conn net.Conn, ch chan User) {
 	// TODO Handle client disconnections?
 	// Close connection when done reading
 	defer func() {
@@ -68,30 +69,34 @@ func handleClient(conn net.Conn, ch chan User) {
 	}
 }
 
-func notifyUser(id int, message string) {
+func (uh UserHandler) notifyUser(id int, message string) {
 	log.Printf("Notifying user %d with message %s", id, message)
 	// Get connection for user
-	if c, ok := users[id]; ok {
+	if c, ok := uh.users[id]; ok {
 		c.Write([]byte(message))
 	}
 }
 
-func follow(from, to int) {
+func (uh UserHandler) follow(from, to int) {
 	log.Printf("User %d follows %d", from, to)
 	fLock.Lock()
 	defer fLock.Unlock()
 	followers[to] = append(followers[to], from)
 }
 
-func unfollow(from, to int) {
+func (uh UserHandler) unfollow(from, to int) {
 	log.Printf("User %d unfollows %d", from, to)
 	fLock.Lock()
 	defer fLock.Unlock()
-	// TODO If performance for array lookup is too expensive, use a sorted array + binary search
+	// TODO If performance for array lookup is too expensive, use a sorted array + binary search.
 	for i := 0; i < len(followers[to]); i++ {
 		if followers[to][i] == from {
 			//log.Printf("Found follower %s for user %s - removing", from, to)
 			followers[to] = append(followers[to][:i], followers[to][i+1:]...)
 		}
 	}
+}
+
+func NewUserHandler() *UserHandler {
+	return &UserHandler{users: make(map[int]net.Conn)}
 }

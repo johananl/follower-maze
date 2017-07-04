@@ -9,13 +9,12 @@ const (
 	eventQueueSize = 200
 )
 
-// A PriorityQueue implements heap.Interface and holds Items.
+// PriorityQueue implements heap.Interface and holds Events.
 type PriorityQueue []*Event
 
 func (pq PriorityQueue) Len() int { return len(pq) }
 
 func (pq PriorityQueue) Less(i, j int) bool {
-	// We want Pop to give us the highest, not lowest, Sequence so we use greater than here.
 	return pq[i].sequence < pq[j].sequence
 }
 
@@ -48,18 +47,34 @@ func (pq *PriorityQueue) update(e *Event, et string, seq int) {
 	heap.Fix(pq, e.index)
 }
 
-var qLock = sync.RWMutex{}
-
-func (pq *PriorityQueue) queueEvent(e *Event) {
-	// TODO Do we need the mutex here?
-	qLock.Lock()
-	defer qLock.Unlock()
-	heap.Push(pq, e)
+// QueueManager manages an event queue. The queue is a priority queue
+// implemented using a heap for event ordering.
+type QueueManager struct {
+	queue *PriorityQueue
+	lock sync.RWMutex
 }
 
-func (pq *PriorityQueue) popEvent() *Event {
+func (qm QueueManager) queueEvent(e *Event) {
 	// TODO Do we need the mutex here?
-	qLock.RLock()
-	defer qLock.RUnlock()
-	return heap.Pop(pq).(*Event)
+	qm.lock.Lock()
+	defer qm.lock.Unlock()
+	heap.Push(qm.queue, e)
+}
+
+func (qm QueueManager) popEvent() *Event {
+	// TODO Do we need the mutex here?
+	qm.lock.RLock()
+	defer qm.lock.RUnlock()
+	return heap.Pop(qm.queue).(*Event)
+}
+
+func NewQueueManager() *QueueManager {
+	pq := make(PriorityQueue, 0)
+	qm := QueueManager{
+		queue: &pq,
+		lock: sync.RWMutex{},
+	}
+	heap.Init(qm.queue)
+
+	return &qm
 }
