@@ -30,6 +30,8 @@ func (uh UserHandler) acceptUsers(l net.Listener) {
 			continue
 		}
 
+		log.Printf("Accepted a client connection from %v", c.RemoteAddr())
+
 		// TODO Do we need channels here? Maybe using a mutex is simpler.
 		ch := make(chan User)
 		go uh.handleUser(c, ch)
@@ -42,7 +44,7 @@ func (uh UserHandler) handleUser(conn net.Conn, ch chan User) {
 	// TODO Handle client disconnections?
 	// Close connection when done reading
 	defer func() {
-		log.Printf("Closing client connection at %v...\n", &conn)
+		log.Printf("Closing client connection at %v\n", conn.RemoteAddr())
 		conn.Close()
 	}()
 

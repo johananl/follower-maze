@@ -17,15 +17,6 @@ const (
 
 func main() {
 	// Initialize logging
-	f, err := os.OpenFile(fmt.Sprintf("%s.log", os.Args[0]), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
-	if err != nil {
-		log.Println("Cannot open log file:", err)
-	}
-	defer f.Close()
-
-	//mw := io.MultiWriter(os.Stdout, f)
-	//log.SetOutput(mw)
-	log.SetOutput(f)
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds)
 
 	// Initialize event source listener
@@ -35,7 +26,7 @@ func main() {
 		os.Exit(1)
 	}
 	defer func() {
-		log.Println("Closing event listener...")
+		log.Println("Closing event listener")
 		es.Close()
 	}()
 	log.Println("Listening for events on " + host + ":" + eventSourcePort)
@@ -47,7 +38,7 @@ func main() {
 		os.Exit(1)
 	}
 	defer func() {
-		log.Println("Closing client listener...")
+		log.Println("Closing client listener")
 		uc.Close()
 	}()
 	log.Println("Listening for user clients on " + host + ":" + userClientsPort)

@@ -44,9 +44,9 @@ func (eh EventHandler) handleEvents(conn net.Conn) {
 
 	// Close connection when done reading
 	defer func() {
-		log.Println("Closing event connection...")
+		log.Println("Closing event connection")
 		log.Println("Total events received:", totalReceived)
-		log.Println("Flushing queue...")
+		log.Println("Flushing queue")
 		eh.flushQueue(eh.queueManager)
 		conn.Close()
 	}()
