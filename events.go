@@ -3,24 +3,23 @@ package main
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net"
 	"regexp"
 	"strconv"
-	"strings"
 )
 
 const (
-	follow string = "F"
-	unfollow string = "U"
-	broadcast string = "B"
-	privateMsg string = "P"
+	follow       string = "F"
+	unfollow     string = "U"
+	broadcast    string = "B"
+	privateMsg   string = "P"
 	statusUpdate string = "S"
 )
 
 type Event struct {
+	rawEvent   string
 	sequence   int
 	eventType  string
 	fromUserId int
@@ -30,7 +29,7 @@ type Event struct {
 
 type EventHandler struct {
 	queueManager *QueueManager
-	userHandler *UserHandler
+	userHandler  *UserHandler
 }
 
 func (eh EventHandler) acceptEvents(l net.Listener) {
@@ -80,7 +79,7 @@ func (eh EventHandler) handleEvents(conn net.Conn) {
 			continue
 		}
 
-		event, err := eh.parseEvent(strings.TrimSpace(message))
+		event, err := eh.parseEvent(message)
 		if err != nil {
 			log.Println("Event parsing failed:", err)
 			continue
@@ -103,11 +102,11 @@ func (eh EventHandler) parseEvent(e string) (*Event, error) {
 	//log.Printf("Parsing event %s", e)
 
 	// TODO Get rid of regex matching and handle string manually?
-	fPattern := regexp.MustCompile(`^(\d+)\|F\|(\d+)\|(\d+)$`)
-	uPattern := regexp.MustCompile(`^(\d+)\|U\|(\d+)\|(\d+)$`)
-	bPattern := regexp.MustCompile(`^(\d+)\|B$`)
-	pPattern := regexp.MustCompile(`^(\d+)\|P\|(\d+)\|(\d+)$`)
-	sPattern := regexp.MustCompile(`^(\d+)\|S\|(\d+)$`)
+	fPattern := regexp.MustCompile(`^(\d+)\|F\|(\d+)\|(\d+)\n$`)
+	uPattern := regexp.MustCompile(`^(\d+)\|U\|(\d+)\|(\d+)\n$`)
+	bPattern := regexp.MustCompile(`^(\d+)\|B\n$`)
+	pPattern := regexp.MustCompile(`^(\d+)\|P\|(\d+)\|(\d+)\n$`)
+	sPattern := regexp.MustCompile(`^(\d+)\|S\|(\d+)\n$`)
 
 	var result *Event
 
@@ -117,6 +116,7 @@ func (eh EventHandler) parseEvent(e string) (*Event, error) {
 		tuid, _ := strconv.Atoi(m[3])
 
 		result = &Event{
+			rawEvent:   e,
 			sequence:   seq,
 			eventType:  follow,
 			fromUserId: fuid,
@@ -127,6 +127,7 @@ func (eh EventHandler) parseEvent(e string) (*Event, error) {
 		fuid, _ := strconv.Atoi(m[2])
 		tuid, _ := strconv.Atoi(m[3])
 		result = &Event{
+			rawEvent:   e,
 			sequence:   seq,
 			eventType:  unfollow,
 			fromUserId: fuid,
@@ -135,6 +136,7 @@ func (eh EventHandler) parseEvent(e string) (*Event, error) {
 	} else if m := bPattern.FindStringSubmatch(e); len(m) != 0 {
 		seq, _ := strconv.Atoi(m[1])
 		result = &Event{
+			rawEvent:  e,
 			sequence:  seq,
 			eventType: broadcast,
 		}
@@ -143,6 +145,7 @@ func (eh EventHandler) parseEvent(e string) (*Event, error) {
 		fuid, _ := strconv.Atoi(m[2])
 		tuid, _ := strconv.Atoi(m[3])
 		result = &Event{
+			rawEvent:   e,
 			sequence:   seq,
 			eventType:  privateMsg,
 			fromUserId: fuid,
@@ -152,6 +155,7 @@ func (eh EventHandler) parseEvent(e string) (*Event, error) {
 		seq, _ := strconv.Atoi(m[1])
 		fuid, _ := strconv.Atoi(m[2])
 		result = &Event{
+			rawEvent:   e,
 			sequence:   seq,
 			eventType:  statusUpdate,
 			fromUserId: fuid,
@@ -168,7 +172,7 @@ func (eh EventHandler) processEvent(e *Event) {
 	case "F":
 		//log.Println("Processing Follow event")
 		eh.userHandler.follow(e.fromUserId, e.toUserId)
-		eh.userHandler.notifyUser(e.toUserId, eh.constructEvent(e))
+		eh.userHandler.notifyUser(e.toUserId, e.rawEvent)
 	case "U":
 		//log.Println("Processing Unfollow event")
 		eh.userHandler.unfollow(e.fromUserId, e.toUserId)
@@ -178,38 +182,22 @@ func (eh EventHandler) processEvent(e *Event) {
 		// Block only "sender" object until end of broadcast processing (block getting next event from queue)
 		// TODO Do we need the blank identifier here?
 		for u, _ := range eh.userHandler.users {
-			eh.userHandler.notifyUser(u, eh.constructEvent(e))
+			eh.userHandler.notifyUser(u, e.rawEvent)
 		}
 	case "P":
 		//log.Println("Processing Private Msg event")
-		eh.userHandler.notifyUser(e.toUserId, eh.constructEvent(e))
+		eh.userHandler.notifyUser(e.toUserId, e.rawEvent)
 	case "S":
 		//log.Println("Processing Status Update event")
 		eh.userHandler.lock.RLock()
 		defer eh.userHandler.lock.RUnlock()
 		for _, u := range eh.userHandler.followers[e.fromUserId] {
-			eh.userHandler.notifyUser(u, eh.constructEvent(e))
+			eh.userHandler.notifyUser(u, e.rawEvent)
 		}
 	default:
 		log.Println("Invalid event type - ignoring")
 		return
 	}
-}
-
-// TODO Cancel this function and instead keep original "message" as a field under Event
-func (eh EventHandler) constructEvent(e *Event) string {
-	var result string
-
-	switch e.eventType {
-	case "F", "U", "P":
-		result = fmt.Sprintf("%d|%s|%d|%d\n", e.sequence, e.eventType, e.fromUserId, e.toUserId)
-	case "B":
-		result = fmt.Sprintf("%d|%s\n", e.sequence, e.eventType)
-	case "S":
-		result = fmt.Sprintf("%d|%s|%d\n", e.sequence, e.eventType, e.fromUserId)
-	}
-
-	return result
 }
 
 // flushQueue empties the queue by processing all remaining messages.
