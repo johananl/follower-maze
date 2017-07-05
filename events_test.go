@@ -27,7 +27,7 @@ var qm = NewQueueManager()
 var uh = NewUserHandler()
 var eh = NewEventHandler(qm, uh)
 
-var parseEventTests = []struct {
+var goodEvents = []struct {
 	in  string
 	out *Event
 }{
@@ -38,14 +38,30 @@ var parseEventTests = []struct {
 	{"634|S|32", &Event{sequence: 634, eventType: statusUpdate, fromUserId: 32}},
 }
 
+var badEvents = []string{
+	"abcd",
+	"634|S|",
+	"666|F|60|50|",
+	"",
+}
+
 func TestParseEvent(t *testing.T) {
-	for _, te := range parseEventTests {
+	for _, te := range goodEvents {
 		e, err := eh.parseEvent(te.in)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if !reflect.DeepEqual(e, te.out) {
 			t.Fatalf("Event parsing failed: got %v, want %v", e, te.out)
+		}
+	}
+}
+
+func TestParseEventErrors(t *testing.T) {
+	for _, te := range badEvents {
+		e, err := eh.parseEvent(te)
+		if e != nil || err == nil {
+			t.Fatalf("Got an event instead of an error: %v should not parse", te)
 		}
 	}
 }
