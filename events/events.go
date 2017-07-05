@@ -180,8 +180,7 @@ func (eh EventHandler) processEvent(e *Event) {
 		//log.Println("Processing broadcast event")
 		// Notify all users
 		// Block only "sender" object until end of broadcast processing (block getting next event from queue)
-		// TODO Do we need the blank identifier here?
-		for u, _ := range eh.userHandler.Users {
+		for u := range eh.userHandler.Users {
 			eh.userHandler.NotifyUser(u, e.rawEvent)
 		}
 	case privateMsg:
