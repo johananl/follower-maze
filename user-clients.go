@@ -36,7 +36,7 @@ func (uh UserHandler) acceptUsers(l net.Listener) {
 		ch := make(chan User)
 		go uh.handleUser(c, ch)
 		user := <-ch // Blocks until handleUser() returns a User
-		uh.users[user.id] = user.connection
+		uh.registerUser(user)
 	}
 }
 
@@ -69,9 +69,13 @@ func (uh UserHandler) handleUser(conn net.Conn, ch chan User) {
 			continue
 		}
 
-		// Register user (map ID to connection)
 		ch <- User{userId, conn}
 	}
+}
+
+// registerUser maps a user ID to a connection.
+func (uh UserHandler) registerUser(u User) {
+	uh.users[u.id] = u.connection
 }
 
 func (uh UserHandler) notifyUser(id int, message string) {
