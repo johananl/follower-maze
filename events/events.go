@@ -213,8 +213,8 @@ func (eh EventHandler) flushQueue(qm *QueueManager) {
 	}
 }
 
-// NewEventHandler constructs a new EventHandler. It receives a pointer to a QueueManager as well
-// as a pointer to a UserHandler.
+// NewEventHandler constructs a new EventHandler and returns a pointer to it. It receives a pointer
+// to a QueueManager as well as a pointer to a UserHandler.
 func NewEventHandler(qm *QueueManager, uh *userclients.UserHandler) *EventHandler {
 	return &EventHandler{qm, uh}
 }
