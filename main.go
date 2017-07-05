@@ -4,6 +4,9 @@ import (
 	"log"
 	"net"
 	"os"
+
+	"bitbucket.org/johananl/follower-maze/events"
+	"bitbucket.org/johananl/follower-maze/userclients"
 )
 
 // TODO Handle connection termination gracefully.
@@ -43,15 +46,15 @@ func main() {
 	log.Println("Listening for user clients on " + host + ":" + userClientsPort)
 
 	// Initialize the queue manager
-	qm := NewQueueManager()
+	qm := events.NewQueueManager()
 
 	// Initialize the user handler
-	uh := NewUserHandler()
+	uh := userclients.NewUserHandler()
 
 	// Initialize the event handler
-	eh := NewEventHandler(qm, uh)
+	eh := events.NewEventHandler(qm, uh)
 
 	// Handle events and users concurrently (acceptUsers runs in the main goroutine).
-	go eh.acceptEvents(es)
-	uh.acceptUsers(uc)
+	go eh.AcceptEvents(es)
+	uh.AcceptUsers(uc)
 }

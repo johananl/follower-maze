@@ -1,4 +1,4 @@
-package main
+package userclients
 
 import (
 	"bufio"
@@ -16,12 +16,12 @@ type User struct {
 }
 
 type UserHandler struct {
-	users map[int]net.Conn
+	Users     map[int]net.Conn
 	followers map[int][]int
-	lock sync.RWMutex
+	lock      sync.RWMutex
 }
 
-func (uh UserHandler) acceptUsers(l net.Listener) {
+func (uh UserHandler) AcceptUsers(l net.Listener) {
 	// Continually accept client connections
 	for {
 		c, err := l.Accept()
@@ -74,25 +74,25 @@ func (uh UserHandler) handleUser(conn net.Conn, ch chan User) {
 
 // registerUser maps a user ID to a connection.
 func (uh UserHandler) registerUser(u User) {
-	uh.users[u.id] = u.connection
+	uh.Users[u.id] = u.connection
 }
 
-func (uh UserHandler) notifyUser(id int, message string) {
+func (uh UserHandler) NotifyUser(id int, message string) {
 	//log.Printf("Notifying user %d with message %s", id, message)
 	// Get connection for user
-	if c, ok := uh.users[id]; ok {
+	if c, ok := uh.Users[id]; ok {
 		c.Write([]byte(message))
 	}
 }
 
-func (uh UserHandler) follow(from, to int) {
+func (uh UserHandler) Follow(from, to int) {
 	//log.Printf("User %d follows %d", from, to)
 	uh.lock.Lock()
 	defer uh.lock.Unlock()
 	uh.followers[to] = append(uh.followers[to], from)
 }
 
-func (uh UserHandler) unfollow(from, to int) {
+func (uh UserHandler) Unfollow(from, to int) {
 	//log.Printf("User %d unfollows %d", from, to)
 	uh.lock.Lock()
 	defer uh.lock.Unlock()
@@ -105,9 +105,16 @@ func (uh UserHandler) unfollow(from, to int) {
 	}
 }
 
+// Followers returns a list of followers for the given user ID.
+func (uh UserHandler) Followers(id int) []int {
+	uh.lock.RLock()
+	defer uh.lock.RUnlock()
+	return uh.followers[id]
+}
+
 func NewUserHandler() *UserHandler {
 	return &UserHandler{
-		users: make(map[int]net.Conn),
+		Users:     make(map[int]net.Conn),
 		followers: make(map[int][]int),
 	}
 }

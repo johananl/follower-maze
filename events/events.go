@@ -1,4 +1,4 @@
-package main
+package events
 
 import (
 	"bufio"
@@ -8,6 +8,8 @@ import (
 	"net"
 	"regexp"
 	"strconv"
+
+	"bitbucket.org/johananl/follower-maze/userclients"
 )
 
 const (
@@ -29,10 +31,10 @@ type Event struct {
 
 type EventHandler struct {
 	queueManager *QueueManager
-	userHandler  *UserHandler
+	userHandler  *userclients.UserHandler
 }
 
-func (eh EventHandler) acceptEvents(l net.Listener) {
+func (eh EventHandler) AcceptEvents(l net.Listener) {
 	// Continually accept event connections
 	// This loop iterates every time a new events connection is made.
 	for {
@@ -79,7 +81,7 @@ func (eh EventHandler) handleEvents(conn net.Conn) {
 			continue
 		}
 
-		event, err := eh.parseEvent(message)
+		event, err := eh.ParseEvent(message)
 		if err != nil {
 			log.Println("Event parsing failed:", err)
 			continue
@@ -97,8 +99,8 @@ func (eh EventHandler) handleEvents(conn net.Conn) {
 	}
 }
 
-// parseEvent gets a string and returns an Event or an error if it cannot parse.
-func (eh EventHandler) parseEvent(e string) (*Event, error) {
+// ParseEvent gets a string and returns an Event or an error if it cannot parse.
+func (eh EventHandler) ParseEvent(e string) (*Event, error) {
 	//log.Printf("Parsing event %s", e)
 	fPattern := regexp.MustCompile(`^(\d+)\|F\|(\d+)\|(\d+)\n$`)
 	uPattern := regexp.MustCompile(`^(\d+)\|U\|(\d+)\|(\d+)\n$`)
@@ -169,28 +171,26 @@ func (eh EventHandler) processEvent(e *Event) {
 	switch e.eventType {
 	case "F":
 		//log.Println("Processing Follow event")
-		eh.userHandler.follow(e.fromUserId, e.toUserId)
-		eh.userHandler.notifyUser(e.toUserId, e.rawEvent)
+		eh.userHandler.Follow(e.fromUserId, e.toUserId)
+		eh.userHandler.NotifyUser(e.toUserId, e.rawEvent)
 	case "U":
 		//log.Println("Processing Unfollow event")
-		eh.userHandler.unfollow(e.fromUserId, e.toUserId)
+		eh.userHandler.Unfollow(e.fromUserId, e.toUserId)
 	case "B":
 		//log.Println("Processing broadcast event")
 		// Notify all users
 		// Block only "sender" object until end of broadcast processing (block getting next event from queue)
 		// TODO Do we need the blank identifier here?
-		for u, _ := range eh.userHandler.users {
-			eh.userHandler.notifyUser(u, e.rawEvent)
+		for u, _ := range eh.userHandler.Users {
+			eh.userHandler.NotifyUser(u, e.rawEvent)
 		}
 	case "P":
 		//log.Println("Processing Private Msg event")
-		eh.userHandler.notifyUser(e.toUserId, e.rawEvent)
+		eh.userHandler.NotifyUser(e.toUserId, e.rawEvent)
 	case "S":
 		//log.Println("Processing Status Update event")
-		eh.userHandler.lock.RLock()
-		defer eh.userHandler.lock.RUnlock()
-		for _, u := range eh.userHandler.followers[e.fromUserId] {
-			eh.userHandler.notifyUser(u, e.rawEvent)
+		for _, u := range eh.userHandler.Followers(e.fromUserId) {
+			eh.userHandler.NotifyUser(u, e.rawEvent)
 		}
 	default:
 		log.Println("Invalid event type - ignoring")
@@ -207,6 +207,6 @@ func (eh EventHandler) flushQueue(qm *QueueManager) {
 	}
 }
 
-func NewEventHandler(qm *QueueManager, uh *UserHandler) *EventHandler {
+func NewEventHandler(qm *QueueManager, uh *userclients.UserHandler) *EventHandler {
 	return &EventHandler{qm, uh}
 }

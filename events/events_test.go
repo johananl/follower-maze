@@ -1,8 +1,10 @@
-package main
+package events
 
 import (
 	"reflect"
 	"testing"
+
+	"bitbucket.org/johananl/follower-maze/userclients"
 )
 
 //func TestAcceptEvents(t *testing.T) {
@@ -24,7 +26,7 @@ import (
 //}
 
 var qm = NewQueueManager()
-var uh = NewUserHandler()
+var uh = userclients.NewUserHandler()
 var eh = NewEventHandler(qm, uh)
 
 var goodEvents = []struct {
@@ -60,7 +62,7 @@ var badEvents = []string{
 
 func TestParseEvent(t *testing.T) {
 	for _, te := range goodEvents {
-		e, err := eh.parseEvent(te.in)
+		e, err := eh.ParseEvent(te.in)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -72,10 +74,9 @@ func TestParseEvent(t *testing.T) {
 
 func TestParseEventErrors(t *testing.T) {
 	for _, te := range badEvents {
-		e, err := eh.parseEvent(te)
+		e, err := eh.ParseEvent(te)
 		if e != nil || err == nil {
 			t.Fatalf("Got an event instead of an error: %v should not parse", te)
 		}
 	}
 }
-
