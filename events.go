@@ -100,8 +100,6 @@ func (eh EventHandler) handleEvents(conn net.Conn) {
 // parseEvent gets a string and returns an Event or an error if it cannot parse.
 func (eh EventHandler) parseEvent(e string) (*Event, error) {
 	//log.Printf("Parsing event %s", e)
-
-	// TODO Get rid of regex matching and handle string manually?
 	fPattern := regexp.MustCompile(`^(\d+)\|F\|(\d+)\|(\d+)\n$`)
 	uPattern := regexp.MustCompile(`^(\d+)\|U\|(\d+)\|(\d+)\n$`)
 	bPattern := regexp.MustCompile(`^(\d+)\|B\n$`)
