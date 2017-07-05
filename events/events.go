@@ -169,14 +169,14 @@ func (eh EventHandler) ParseEvent(e string) (*Event, error) {
 
 func (eh EventHandler) processEvent(e *Event) {
 	switch e.eventType {
-	case "F":
+	case follow:
 		//log.Println("Processing Follow event")
 		eh.userHandler.Follow(e.fromUserId, e.toUserId)
 		eh.userHandler.NotifyUser(e.toUserId, e.rawEvent)
-	case "U":
+	case unfollow:
 		//log.Println("Processing Unfollow event")
 		eh.userHandler.Unfollow(e.fromUserId, e.toUserId)
-	case "B":
+	case broadcast:
 		//log.Println("Processing broadcast event")
 		// Notify all users
 		// Block only "sender" object until end of broadcast processing (block getting next event from queue)
@@ -184,10 +184,10 @@ func (eh EventHandler) processEvent(e *Event) {
 		for u, _ := range eh.userHandler.Users {
 			eh.userHandler.NotifyUser(u, e.rawEvent)
 		}
-	case "P":
+	case privateMsg:
 		//log.Println("Processing Private Msg event")
 		eh.userHandler.NotifyUser(e.toUserId, e.rawEvent)
-	case "S":
+	case statusUpdate:
 		//log.Println("Processing Status Update event")
 		for _, u := range eh.userHandler.Followers(e.fromUserId) {
 			eh.userHandler.NotifyUser(u, e.rawEvent)
