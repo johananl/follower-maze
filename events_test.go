@@ -33,6 +33,9 @@ var parseEventTests = []struct {
 }{
 	{"666|F|60|50", &Event{sequence: 666, eventType: follow, fromUserId: 60, toUserId: 50}},
 	{"1|U|12|9", &Event{sequence: 1, eventType: unfollow, fromUserId: 12, toUserId: 9}},
+	{"542532|B", &Event{sequence: 542532, eventType: broadcast}},
+	{"43|P|32|56", &Event{sequence: 43, eventType: privateMsg, fromUserId: 32, toUserId: 56}},
+	{"634|S|32", &Event{sequence: 634, eventType: statusUpdate, fromUserId: 32}},
 }
 
 func TestParseEvent(t *testing.T) {
