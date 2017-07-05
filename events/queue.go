@@ -12,6 +12,38 @@ import (
 // since the performance impact (event delivery delay) is trivial.
 const eventQueueSize = 200
 
+// QueueManager manages an event queue. The queue is a priority queue
+// implemented using a heap for event ordering.
+type QueueManager struct {
+	queue *PriorityQueue
+	lock  sync.RWMutex
+}
+
+func (qm QueueManager) queueEvent(e *Event) {
+	// TODO Do we need the mutex here?
+	qm.lock.Lock()
+	defer qm.lock.Unlock()
+	heap.Push(qm.queue, e)
+}
+
+func (qm QueueManager) popEvent() *Event {
+	// TODO Do we need the mutex here?
+	qm.lock.RLock()
+	defer qm.lock.RUnlock()
+	return heap.Pop(qm.queue).(*Event)
+}
+
+func NewQueueManager() *QueueManager {
+	pq := make(PriorityQueue, 0)
+	qm := QueueManager{
+		queue: &pq,
+		lock:  sync.RWMutex{},
+	}
+	heap.Init(qm.queue)
+
+	return &qm
+}
+
 // PriorityQueue implements heap.Interface and holds Events.
 type PriorityQueue []*Event
 
@@ -48,36 +80,4 @@ func (pq *PriorityQueue) update(e *Event, et string, seq int) {
 	e.eventType = et
 	e.sequence = seq
 	heap.Fix(pq, e.index)
-}
-
-// QueueManager manages an event queue. The queue is a priority queue
-// implemented using a heap for event ordering.
-type QueueManager struct {
-	queue *PriorityQueue
-	lock  sync.RWMutex
-}
-
-func (qm QueueManager) queueEvent(e *Event) {
-	// TODO Do we need the mutex here?
-	qm.lock.Lock()
-	defer qm.lock.Unlock()
-	heap.Push(qm.queue, e)
-}
-
-func (qm QueueManager) popEvent() *Event {
-	// TODO Do we need the mutex here?
-	qm.lock.RLock()
-	defer qm.lock.RUnlock()
-	return heap.Pop(qm.queue).(*Event)
-}
-
-func NewQueueManager() *QueueManager {
-	pq := make(PriorityQueue, 0)
-	qm := QueueManager{
-		queue: &pq,
-		lock:  sync.RWMutex{},
-	}
-	heap.Init(qm.queue)
-
-	return &qm
 }
