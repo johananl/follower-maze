@@ -18,7 +18,7 @@ const (
 )
 
 func main() {
-	// Initialize logging
+	// Set logging
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds)
 
 	// Initialize event source listener
