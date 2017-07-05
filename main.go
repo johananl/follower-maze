@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"os"
@@ -52,11 +51,7 @@ func main() {
 	// Initialize the event handler
 	eh := NewEventHandler(qm, uh)
 
-	// Handle events and users concurrently
-	// TODO Hide "go" from main?
+	// Handle events and users concurrently (acceptUsers runs in the main goroutine).
 	go eh.acceptEvents(es)
-	go uh.acceptUsers(uc)
-
-	// Block main goroutine
-	fmt.Scanln()
+	uh.acceptUsers(uc)
 }
