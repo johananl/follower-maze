@@ -74,10 +74,3 @@ func (pq *PriorityQueue) Pop() interface{} {
 	*pq = old[0 : n-1]
 	return item
 }
-
-// update modifies the Sequence and value of an Event in the queue.
-func (pq *PriorityQueue) update(e *Event, et string, seq int) {
-	e.eventType = et
-	e.sequence = seq
-	heap.Fix(pq, e.index)
-}
