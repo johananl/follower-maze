@@ -161,7 +161,7 @@ func (eh EventHandler) ParseEvent(e string) (*Event, error) {
 			fromUserId: fuid,
 		}
 	} else {
-		return nil, errors.New("Invalid message: " + e)
+		return nil, errors.New("Invalid event: " + e)
 	}
 
 	return result, nil
