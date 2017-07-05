@@ -12,6 +12,14 @@ import (
 	"strings"
 )
 
+const (
+	follow string = "F"
+	unfollow string = "U"
+	broadcast string = "B"
+	privateMsg string = "P"
+	statusUpdate string = "S"
+)
+
 type Event struct {
 	sequence   int
 	eventType  string
@@ -110,7 +118,7 @@ func (eh EventHandler) parseEvent(e string) (*Event, error) {
 
 		result = &Event{
 			sequence:   seq,
-			eventType:  "F",
+			eventType:  follow,
 			fromUserId: fuid,
 			toUserId:   tuid,
 		}
@@ -120,7 +128,7 @@ func (eh EventHandler) parseEvent(e string) (*Event, error) {
 		tuid, _ := strconv.Atoi(m[3])
 		result = &Event{
 			sequence:   seq,
-			eventType:  "U",
+			eventType:  unfollow,
 			fromUserId: fuid,
 			toUserId:   tuid,
 		}
@@ -128,7 +136,7 @@ func (eh EventHandler) parseEvent(e string) (*Event, error) {
 		seq, _ := strconv.Atoi(m[1])
 		result = &Event{
 			sequence:  seq,
-			eventType: "B",
+			eventType: broadcast,
 		}
 	} else if m := pPattern.FindStringSubmatch(e); len(m) != 0 {
 		seq, _ := strconv.Atoi(m[1])
@@ -136,7 +144,7 @@ func (eh EventHandler) parseEvent(e string) (*Event, error) {
 		tuid, _ := strconv.Atoi(m[3])
 		result = &Event{
 			sequence:   seq,
-			eventType:  "P",
+			eventType:  privateMsg,
 			fromUserId: fuid,
 			toUserId:   tuid,
 		}
@@ -145,7 +153,7 @@ func (eh EventHandler) parseEvent(e string) (*Event, error) {
 		fuid, _ := strconv.Atoi(m[2])
 		result = &Event{
 			sequence:   seq,
-			eventType:  "S",
+			eventType:  statusUpdate,
 			fromUserId: fuid,
 		}
 	} else {
