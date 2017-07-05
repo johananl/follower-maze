@@ -32,7 +32,7 @@ func (uh UserHandler) acceptUsers(l net.Listener) {
 
 		log.Printf("Accepted a client connection from %v", c.RemoteAddr())
 
-		// TODO Do we need channels here? Maybe using a mutex is simpler.
+		// The channel is used to ensure safe writes to the users map (in registerUser).
 		ch := make(chan User)
 		go uh.handleUser(c, ch)
 		user := <-ch // Blocks until handleUser() returns a User
@@ -48,7 +48,6 @@ func (uh UserHandler) handleUser(conn net.Conn, ch chan User) {
 		conn.Close()
 	}()
 
-	// Continually read from connection
 	// This loop iterates every time a newline-delimited string is read from
 	// the TCP connection.
 	br := bufio.NewReader(conn)
