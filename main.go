@@ -9,8 +9,6 @@ import (
 	"bitbucket.org/johananl/follower-maze/userclients"
 )
 
-// TODO Print stats
-
 const (
 	host            = "localhost"
 	eventSourcePort = "9090"
