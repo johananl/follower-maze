@@ -7,24 +7,6 @@ import (
 	"bitbucket.org/johananl/follower-maze/userclients"
 )
 
-//func TestAcceptEvents(t *testing.T) {
-//	// Initialize the queue manager
-//	qm := NewQueueManager()
-//
-//	// Initialize the user handler
-//	uh := NewUserHandler()
-//
-//	// Initialize the event handler
-//	eh := NewEventHandler(qm, uh)
-//
-//	l, err := net.Listen("tcp", ":9999")
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//	defer l.Close()
-//
-//}
-
 var qm = NewQueueManager()
 var uh = userclients.NewUserHandler()
 var eh = NewEventHandler(qm, uh)
