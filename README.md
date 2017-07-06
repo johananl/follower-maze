@@ -47,7 +47,8 @@ didn't manage to finish in time:
 
 - Coupling and testability - The solution isn't as loosely-coupled as I would have liked. Many of the functions require
 further refactoring to make them more isolated and testable. Given more time I would have replaced some of the concrete
-type arguments with interfaces to allow easy replacement in unit tests and more generic code.
+type arguments with interfaces to allow easy replacement in unit tests and more generic code, and would have made the
+functions more isolated, possibly by breaking them down to smaller, single-responsibility functions.
 - Test coverage - Unfortunately I didn't have enough time to write sufficient unit tests. I wrote some sample tests in
 _events_test.go_ to illustrate the way I write tests, however I had to leave a lot of the code uncovered.
 - Logging - At the moment the server's logging is pretty basic. It is good enough for figuring out when things go wrong
