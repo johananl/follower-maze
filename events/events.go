@@ -107,14 +107,16 @@ func (eh EventHandler) handleEvents(conn net.Conn) {
 	}
 }
 
+// These patterns are used by ParseEvent to match incoming events. They are initialized outside
+// the function because compiling regex patterns is very expensive.
+var fPattern = regexp.MustCompile(`^(\d+)\|F\|(\d+)\|(\d+)\n$`)
+var uPattern = regexp.MustCompile(`^(\d+)\|U\|(\d+)\|(\d+)\n$`)
+var bPattern = regexp.MustCompile(`^(\d+)\|B\n$`)
+var pPattern = regexp.MustCompile(`^(\d+)\|P\|(\d+)\|(\d+)\n$`)
+var sPattern = regexp.MustCompile(`^(\d+)\|S\|(\d+)\n$`)
+
 // ParseEvent gets a string and returns an Event or an error.
 func (eh EventHandler) ParseEvent(e string) (*Event, error) {
-	// TODO Initialize regex patterns outside this method since it is called for each event.
-	fPattern := regexp.MustCompile(`^(\d+)\|F\|(\d+)\|(\d+)\n$`)
-	uPattern := regexp.MustCompile(`^(\d+)\|U\|(\d+)\|(\d+)\n$`)
-	bPattern := regexp.MustCompile(`^(\d+)\|B\n$`)
-	pPattern := regexp.MustCompile(`^(\d+)\|P\|(\d+)\|(\d+)\n$`)
-	sPattern := regexp.MustCompile(`^(\d+)\|S\|(\d+)\n$`)
 
 	var result *Event
 
