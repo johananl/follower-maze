@@ -83,7 +83,7 @@ func (uh UserHandler) handleUser(conn net.Conn, ch chan User) {
 	}
 }
 
-// registerUser Maps a user ID to a connection.
+// registerUser maps a user ID to a connection.
 func (uh UserHandler) registerUser(u User) {
 	// We don't need to lock here since this function is always called synchronously.
 	uh.Users[u.id] = u.connection
