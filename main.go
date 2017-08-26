@@ -52,7 +52,7 @@ func main() {
 	// Initialize the event handler
 	eh := events.NewEventHandler(qm, uh)
 
-	// Handle events and users concurrently (acceptUsers runs in the main goroutine).
+	// Handle events and users concurrently (acceptUsers runs in the main goroutine)
 	go eh.AcceptEvents(es)
 	uh.AcceptUsers(uc)
 }
