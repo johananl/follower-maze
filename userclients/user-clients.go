@@ -54,8 +54,6 @@ func (uh UserHandler) handleUser(conn net.Conn, ch chan User) {
 	// Close connection when done reading.
 	defer func() {
 		log.Printf("Closing client connection at %v\n", conn.RemoteAddr())
-		// TODO Unregister user
-		// TODO Remove followers status
 		conn.Close()
 	}()
 
