@@ -206,7 +206,6 @@ func (eh EventHandler) processEvent(e *Event) {
 		// This is just for safety and good practice since all received events should have been
 		// parsed successfully and therefore should not have an invalid event type.
 		log.Println("Invalid event type - ignoring")
-		return
 	}
 }
 
