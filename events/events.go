@@ -108,7 +108,8 @@ func (eh EventHandler) handleEvents(conn net.Conn) {
 }
 
 // These patterns are used by ParseEvent to match incoming events. They are initialized outside
-// the function because compiling regex patterns is very expensive.
+// the function because compiling regex patterns is very expensive and ParseEvent is called
+// intensively.
 var fPattern = regexp.MustCompile(`^(\d+)\|F\|(\d+)\|(\d+)\n$`)
 var uPattern = regexp.MustCompile(`^(\d+)\|U\|(\d+)\|(\d+)\n$`)
 var bPattern = regexp.MustCompile(`^(\d+)\|B\n$`)
