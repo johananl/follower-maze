@@ -21,6 +21,8 @@ type QueueManager struct {
 
 // Stores an event in the queue.
 func (qm QueueManager) queueEvent(e *Event) {
+	// This lock isn't necessary as long as there is just one event source since there is no chance
+	// for concurrent access to the queue.
 	qm.lock.Lock()
 	defer qm.lock.Unlock()
 	heap.Push(qm.queue, e)
