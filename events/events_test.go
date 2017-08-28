@@ -63,16 +63,16 @@ func TestParseEventErrors(t *testing.T) {
 	}
 }
 
-func TestQueueEvent(t *testing.T) {
-	e := &Event{
-			rawEvent:   "666|F|60|50\n",
-			sequence:   666,
-			eventType:  follow,
-			fromUserId: 60,
-			toUserId:   50,
-		}
+var testEvent = &Event{
+	rawEvent:   "666|F|60|50\n",
+	sequence:   666,
+	eventType:  follow,
+	fromUserId: 60,
+	toUserId:   50,
+}
 
-	qm.queueEvent(e)
+func TestQueueEvent(t *testing.T) {
+	qm.queueEvent(testEvent)
 
 	if qm.queue.Len() != 1 {
 		t.Fatalf("Invalid queue length after queueing event: got %d, want %d", qm.queue.Len(), 1)
