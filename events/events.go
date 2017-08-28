@@ -70,7 +70,7 @@ func (eh EventHandler) handleEvents(conn net.Conn) {
 		log.Println("Closing event connection")
 		log.Println("Total events received:", totalReceived)
 
-		// Send any events left in the queue after we stopped receiving events.
+		// Send any events left in the queue after the event connection is closed.
 		log.Println("Flushing queue")
 		eh.flushQueue(eh.queueManager)
 		conn.Close()
