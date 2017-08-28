@@ -72,8 +72,7 @@ To run the solution after building, simply execute `./follower-maze`.
 
 ### One Event Source
 The solution supports **one event source**. Even though the main loop in `events.AcceptEvents()` supports multiple
-_event source_ connections, I haven't implemented concurrency mechanisms (mainly locking) for more than one event
-source.
+_event source_ connections, I haven't tested the application with more than one event source.
 
 ### Restart After Running
 
