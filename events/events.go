@@ -12,7 +12,7 @@ import (
 	"bitbucket.org/johananl/follower-maze/userclients"
 )
 
-// Valid event types.
+// Valid event types
 const (
 	follow       string = "F"
 	unfollow     string = "U"
