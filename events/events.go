@@ -203,7 +203,8 @@ func (eh EventHandler) processEvent(e *Event) {
 			eh.userHandler.NotifyUser(u, e.rawEvent)
 		}
 	default:
-		// This is just for safety since all received events should have been parsed successfully.
+		// This is just for safety and good practice since all received events should have been
+		// parsed successfully and therefore should not have an invalid event type.
 		log.Println("Invalid event type - ignoring")
 		return
 	}
