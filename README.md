@@ -7,11 +7,6 @@ developer challenge**. The server receives an unordered stream of events in a cu
 source_ over a TCP connection and forwards them to multiple _user clients_ according to a specific routing logic in an
 ordered manner.
 
-## Contents
-
-For your convenience I included two binaries compiled from the solution - one for **macOS 64-bit** and another for
-**Linux 64-bit**. They are both under the `dist` directory.
-
 ## Design
 
 I have chosen to implement the solution in Go. Go is an ideal programming language for writing servers since it provides
