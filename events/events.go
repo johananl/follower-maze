@@ -24,7 +24,7 @@ const (
 // Event represents an event received from the event source. Events are handled by an EventHandler.
 // The rawEvent field is used to store the original event (after parsing) as received from the TCP
 // connection. This is done to avoid having to reconstruct the raw event before sending it to user
-// clients.
+// clients, which is relatively expensive.
 type Event struct {
 	rawEvent   string
 	sequence   int
