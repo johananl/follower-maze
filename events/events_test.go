@@ -78,3 +78,14 @@ func TestQueueEvent(t *testing.T) {
 		t.Fatalf("Invalid queue length after queueing event: got %d, want %d", qm.queue.Len(), 1)
 	}
 }
+
+func TestPopEvent(t *testing.T) {
+	e := qm.popEvent()
+
+	if e != testEvent {
+		t.Fatalf("Invalid event popped from queue: got %v, want %v", e, testEvent)
+	}
+	if qm.queue.Len() != 0 {
+		t.Fatalf("Popped event not deleted from queue")
+	}
+}
