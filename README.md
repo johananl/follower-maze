@@ -80,6 +80,5 @@ _event source_ connections, I haven't tested the application with more than one 
 
 ### Restart After Running
 
-Running the testing client (JAR file) more than once against my solution currently requires restarting the server. The
-reason is that I haven't implemented cleanup of the data structures responsible for tracking connected users and
-followers state.
+Running the test client more than once against my solution currently requires restarting the server. The reason is that
+I haven't implemented cleanup of the data structures responsible for tracking connected users and followers state.
