@@ -48,7 +48,7 @@ didn't manage to finish in time:
 - Coupling and testability - The solution isn't as loosely-coupled as I would have liked. Many of the functions require
 further refactoring to make them more isolated and testable. Given more time I would have made the functions more
 isolated by breaking them down to smaller, single-responsibility functions.
-- Test coverage - Given more time I would would have improved the test coverage.
+- Test coverage - Given more time I would have improved the test coverage.
 - Logging - At the moment the server's logging is pretty basic. It is good enough for figuring out when things go wrong
 and for tracking the server's actions, but given more time I would have liked to improve this aspect as well.
 
