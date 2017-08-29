@@ -7,6 +7,11 @@ developer challenge**. The server receives an unordered stream of events in a cu
 source_ over a TCP connection and forwards them to multiple _user clients_ according to a specific routing logic in an
 ordered manner.
 
+## Instructions
+
+The instructions for the challenge as well as the testing client are included under the `instructions` directory. You
+may use them to better understand what this challenge is about as well as to test the proposed solution.
+
 ## Design
 
 I have chosen to implement the solution in Go. Go is an ideal programming language for writing servers since it provides
@@ -44,8 +49,8 @@ didn't manage to finish in time:
 further refactoring to make them more isolated and testable. Given more time I would have replaced some of the concrete
 type arguments with interfaces to allow easy replacement in unit tests and more generic code, and would have made the
 functions more isolated, possibly by breaking them down to smaller, single-responsibility functions.
-- Test coverage - Unfortunately I didn't have enough time to write sufficient unit tests. I wrote some sample tests in
-_events_test.go_ to illustrate the way I write tests, however I had to leave a lot of the code uncovered.
+- Test coverage - Unfortunately I didn't have enough time to write sufficient unit tests. Given more time I would would
+have improved the test coverage.
 - Logging - At the moment the server's logging is pretty basic. It is good enough for figuring out when things go wrong
 and for tracking the server's actions, but given more time I would have liked to improve this aspect as well.
 
@@ -66,7 +71,8 @@ In order to run the unit tests, please run `go test $(go list ./...)` in the pro
 
 ### Running
 
-To run the solution after building, simply execute `./follower-maze`.
+To run the solution after building, simply execute `./follower-maze`. You can then run the test client using
+`./instructions/followermaze.sh`.
 
 ## Caveats and Limitations
 
