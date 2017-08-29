@@ -3,9 +3,9 @@
 ## General
 
 This application is a **TCP socket server** implemented in Go. It is a proposed solution to SoundCloud's [backend
-developer challenge](instructions). The server receives an unordered stream of events in a custom text-based protocol from one _event
-source_ over a TCP connection and forwards them to multiple _user clients_ according to a specific routing logic in an
-ordered manner.
+developer challenge](instructions/instructions.md). The server receives an unordered stream of events in a custom
+text-based protocol from one _event source_ over a TCP connection and forwards them to multiple _user clients_ according
+to a specific routing logic in an ordered manner.
 
 ## Instructions
 
