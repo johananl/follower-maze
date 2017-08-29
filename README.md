@@ -17,7 +17,7 @@ may use them to better understand what this challenge is about as well as to tes
 I have chosen to implement the solution in Go. Go is an ideal programming language for writing servers since it provides
 built-in mechanisms for concurrency (goroutines, channels). In addition, Go is a low-level language which allows for
 high performance. I have decided to challenge myself with this language choice: I learned Go only a couple of months
-ago. My main language is Python. Still, I wanted implement the solution in Go both in order to improve my understanding
+ago. My main language is Python. Still, I wanted to implement the solution in Go both in order to improve my understanding
 of the language and because it is just perfect for the task.
 
 The solution is implemented using Go's standard library alone. No 3rd-party libraries were used in the implementation.
