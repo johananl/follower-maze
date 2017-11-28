@@ -68,13 +68,13 @@ func (uh UserHandler) handleUser(conn net.Conn) {
 		}
 
 		// Parse user ID
-		userId, err := strconv.Atoi(strings.TrimSpace(message))
+		userID, err := strconv.Atoi(strings.TrimSpace(message))
 		if err != nil {
-			log.Printf("Invalid user ID %d: %s", userId, err.Error())
+			log.Printf("Invalid user ID %d: %s", userID, err.Error())
 			continue
 		}
 
-		uh.registerUser(User{userId, conn})
+		uh.registerUser(User{userID, conn})
 	}
 }
 
