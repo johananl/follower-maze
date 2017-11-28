@@ -70,7 +70,7 @@ func (uh UserHandler) handleUser(conn net.Conn) {
 		// Parse user ID
 		userId, err := strconv.Atoi(strings.TrimSpace(message))
 		if err != nil {
-			log.Printf("Invalid user ID %s: %s", userId, err.Error())
+			log.Printf("Invalid user ID %d: %s", userId, err.Error())
 			continue
 		}
 
