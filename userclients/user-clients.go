@@ -30,7 +30,7 @@ type UserHandler struct {
 }
 
 // AcceptUsers accepts TCP connections from user clients and triggers registration for them.
-func (uh UserHandler) AcceptUsers(l net.Listener) {
+func (uh *UserHandler) AcceptUsers(l net.Listener) {
 	// Continually accept client connections. This loop iterates every time a new connection from
 	// a user client is received and blocks at Accept().
 	for {
@@ -47,7 +47,7 @@ func (uh UserHandler) AcceptUsers(l net.Listener) {
 }
 
 // Reads a user ID from the TCP connection and sends a User struct over the channel.
-func (uh UserHandler) handleUser(conn net.Conn) {
+func (uh *UserHandler) handleUser(conn net.Conn) {
 	// Close connection when done reading.
 	defer func() {
 		log.Printf("Closing client connection at %v\n", conn.RemoteAddr())
@@ -79,14 +79,14 @@ func (uh UserHandler) handleUser(conn net.Conn) {
 }
 
 // registerUser maps a user ID to a connection.
-func (uh UserHandler) registerUser(u User) {
+func (uh *UserHandler) registerUser(u User) {
 	uh.uLock.Lock()
 	defer uh.uLock.Unlock()
 	uh.Users[u.id] = u.connection
 }
 
 // NotifyUser sends a string-encoded event to a user.
-func (uh UserHandler) NotifyUser(id int, message string) {
+func (uh *UserHandler) NotifyUser(id int, message string) {
 	// Get connection by user ID. No need to lock here as long as we have just one event source.
 	if c, ok := uh.Users[id]; ok {
 		c.Write([]byte(message))
@@ -94,14 +94,14 @@ func (uh UserHandler) NotifyUser(id int, message string) {
 }
 
 // Follow registers a user as a follower of another user.
-func (uh UserHandler) Follow(from, to int) {
+func (uh *UserHandler) Follow(from, to int) {
 	uh.fLock.Lock()
 	defer uh.fLock.Unlock()
 	uh.followers[to] = append(uh.followers[to], from)
 }
 
 // Unfollow removes a user from another user's followers list.
-func (uh UserHandler) Unfollow(from, to int) {
+func (uh *UserHandler) Unfollow(from, to int) {
 	uh.fLock.Lock()
 	defer uh.fLock.Unlock()
 	// TODO If performance for array lookups becomes a problem, use a sorted array + binary search.
@@ -113,7 +113,7 @@ func (uh UserHandler) Unfollow(from, to int) {
 }
 
 // Followers returns a list of followers for the given user ID.
-func (uh UserHandler) Followers(id int) []int {
+func (uh *UserHandler) Followers(id int) []int {
 	uh.fLock.RLock()
 	defer uh.fLock.RUnlock()
 	return uh.followers[id]
