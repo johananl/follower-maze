@@ -20,7 +20,7 @@ type QueueManager struct {
 }
 
 // Stores an event in the queue.
-func (qm QueueManager) queueEvent(e *Event) {
+func (qm *QueueManager) queueEvent(e *Event) {
 	// This lock isn't necessary as long as there is just one event source since there is no chance
 	// for concurrent access to the queue.
 	qm.lock.Lock()
@@ -29,7 +29,7 @@ func (qm QueueManager) queueEvent(e *Event) {
 }
 
 // Returns the top (first) event in the queue and deletes it from the queue.
-func (qm QueueManager) popEvent() *Event {
+func (qm *QueueManager) popEvent() *Event {
 	qm.lock.RLock()
 	defer qm.lock.RUnlock()
 	return heap.Pop(qm.queue).(*Event)

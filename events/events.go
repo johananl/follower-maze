@@ -43,7 +43,7 @@ type EventHandler struct {
 
 // AcceptEvents accepts TCP connections from event sources and triggers handling of messages over
 // these connections.
-func (eh EventHandler) AcceptEvents(l net.Listener) {
+func (eh *EventHandler) AcceptEvents(l net.Listener) {
 	// Continually accept event connections. This loop iterates every time a new connection from an
 	// event source is received and blocks at Accept().
 	for {
@@ -61,7 +61,7 @@ func (eh EventHandler) AcceptEvents(l net.Listener) {
 }
 
 // Reads a stream of events from a TCP connection and stores them in a priority queue.
-func (eh EventHandler) handleEvents(conn net.Conn) {
+func (eh *EventHandler) handleEvents(conn net.Conn) {
 	// A counter for the total number of valid events received from the connection.
 	totalReceived := 0
 
@@ -117,7 +117,7 @@ var pPattern = regexp.MustCompile(`^(\d+)\|P\|(\d+)\|(\d+)\n$`)
 var sPattern = regexp.MustCompile(`^(\d+)\|S\|(\d+)\n$`)
 
 // ParseEvent gets a string and returns an Event or an error.
-func (eh EventHandler) ParseEvent(e string) (*Event, error) {
+func (eh *EventHandler) ParseEvent(e string) (*Event, error) {
 
 	var result *Event
 
@@ -180,7 +180,7 @@ func (eh EventHandler) ParseEvent(e string) (*Event, error) {
 
 // Processes the received event. Depending on the event's type, processing may include registering
 // a Follow or Unfollow event and sending the event to one or more user clients.
-func (eh EventHandler) processEvent(e *Event) {
+func (eh *EventHandler) processEvent(e *Event) {
 	switch e.eventType {
 	case follow:
 		// Register fromUserId as a follower of toUserId and notify toUserId.
@@ -211,7 +211,7 @@ func (eh EventHandler) processEvent(e *Event) {
 
 // Empties the queue by processing all remaining messages. This method is called once the event
 // source connection has been closed.
-func (eh EventHandler) flushQueue(qm *QueueManager) {
+func (eh *EventHandler) flushQueue(qm *QueueManager) {
 	for qm.queue.Len() > 0 {
 		eh.processEvent(qm.popEvent())
 	}
