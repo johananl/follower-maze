@@ -19,13 +19,13 @@ func main() {
 	// Set logging
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds)
 
-	// Initialize the queue manager
+	// Initialize queue manager
 	qm := events.NewQueueManager()
 
-	// Initialize the user handler
+	// Initialize user handler
 	uh := userclients.NewUserHandler()
 
-	// Initialize the event handler
+	// Initialize event handler
 	eh := events.NewEventHandler(qm, uh)
 
 	// Initialize event source listener
