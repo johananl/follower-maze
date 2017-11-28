@@ -19,6 +19,15 @@ func main() {
 	// Set logging
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds)
 
+	// Initialize the queue manager
+	qm := events.NewQueueManager()
+
+	// Initialize the user handler
+	uh := userclients.NewUserHandler()
+
+	// Initialize the event handler
+	eh := events.NewEventHandler(qm, uh)
+
 	// Initialize event source listener
 	es, err := net.Listen("tcp", host+":"+eventSourcePort)
 	if err != nil {
@@ -42,15 +51,6 @@ func main() {
 		uc.Close()
 	}()
 	log.Println("Listening for user clients on " + host + ":" + userClientsPort)
-
-	// Initialize the queue manager
-	qm := events.NewQueueManager()
-
-	// Initialize the user handler
-	uh := userclients.NewUserHandler()
-
-	// Initialize the event handler
-	eh := events.NewEventHandler(qm, uh)
 
 	// Handle events and users concurrently (acceptUsers runs in the main goroutine)
 	go eh.AcceptEvents(es)
