@@ -29,8 +29,8 @@ type Event struct {
 	rawEvent   string
 	sequence   int
 	eventType  string
-	fromUserId int
-	toUserId   int
+	fromUserID int
+	toUserID   int
 	index      int // Used for ordering in a priority queue
 }
 
@@ -130,8 +130,8 @@ func (eh *EventHandler) ParseEvent(e string) (*Event, error) {
 			rawEvent:   e,
 			sequence:   seq,
 			eventType:  follow,
-			fromUserId: fuid,
-			toUserId:   tuid,
+			fromUserID: fuid,
+			toUserID:   tuid,
 		}
 	} else if m := uPattern.FindStringSubmatch(e); len(m) != 0 {
 		seq, _ := strconv.Atoi(m[1])
@@ -141,8 +141,8 @@ func (eh *EventHandler) ParseEvent(e string) (*Event, error) {
 			rawEvent:   e,
 			sequence:   seq,
 			eventType:  unfollow,
-			fromUserId: fuid,
-			toUserId:   tuid,
+			fromUserID: fuid,
+			toUserID:   tuid,
 		}
 	} else if m := bPattern.FindStringSubmatch(e); len(m) != 0 {
 		seq, _ := strconv.Atoi(m[1])
@@ -159,8 +159,8 @@ func (eh *EventHandler) ParseEvent(e string) (*Event, error) {
 			rawEvent:   e,
 			sequence:   seq,
 			eventType:  privateMsg,
-			fromUserId: fuid,
-			toUserId:   tuid,
+			fromUserID: fuid,
+			toUserID:   tuid,
 		}
 	} else if m := sPattern.FindStringSubmatch(e); len(m) != 0 {
 		seq, _ := strconv.Atoi(m[1])
@@ -169,7 +169,7 @@ func (eh *EventHandler) ParseEvent(e string) (*Event, error) {
 			rawEvent:   e,
 			sequence:   seq,
 			eventType:  statusUpdate,
-			fromUserId: fuid,
+			fromUserID: fuid,
 		}
 	} else {
 		return nil, errors.New("Invalid event: " + e)
@@ -184,11 +184,11 @@ func (eh *EventHandler) processEvent(e *Event) {
 	switch e.eventType {
 	case follow:
 		// Register fromUserId as a follower of toUserId and notify toUserId.
-		eh.userHandler.Follow(e.fromUserId, e.toUserId)
-		eh.userHandler.NotifyUser(e.toUserId, e.rawEvent)
+		eh.userHandler.Follow(e.fromUserID, e.toUserID)
+		eh.userHandler.NotifyUser(e.toUserID, e.rawEvent)
 	case unfollow:
 		// Remove fromUserId from toUserId's followers.
-		eh.userHandler.Unfollow(e.fromUserId, e.toUserId)
+		eh.userHandler.Unfollow(e.fromUserID, e.toUserID)
 	case broadcast:
 		// Notify all connected users.
 		for u := range eh.userHandler.Users {
@@ -196,10 +196,10 @@ func (eh *EventHandler) processEvent(e *Event) {
 		}
 	case privateMsg:
 		// Notify toUserId.
-		eh.userHandler.NotifyUser(e.toUserId, e.rawEvent)
+		eh.userHandler.NotifyUser(e.toUserID, e.rawEvent)
 	case statusUpdate:
 		// Notify all followers of fromUserId.
-		for _, u := range eh.userHandler.Followers(e.fromUserId) {
+		for _, u := range eh.userHandler.Followers(e.fromUserID) {
 			eh.userHandler.NotifyUser(u, e.rawEvent)
 		}
 	default:
