@@ -63,6 +63,7 @@ func (eh *EventHandler) AcceptEvents(l net.Listener) {
 // Reads a stream of events from a TCP connection and stores them in a priority queue.
 func (eh *EventHandler) handleEvents(conn net.Conn) {
 	// A counter for the total number of valid events received from the connection.
+	// TODO What happens when this overflows?
 	totalReceived := 0
 
 	// Close connection when done reading.
@@ -80,6 +81,7 @@ func (eh *EventHandler) handleEvents(conn net.Conn) {
 	// Continually read from connection. This loop iterates every time a newline-delimited string
 	// is read from the TCP connection. The loop blocks at ReadString().
 	for {
+		// TODO Could get valid data AND an error
 		message, err := br.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
