@@ -183,11 +183,11 @@ func (eh *EventHandler) ParseEvent(e string) (*Event, error) {
 func (eh *EventHandler) processEvent(e *Event) {
 	switch e.eventType {
 	case follow:
-		// Register fromUserId as a follower of toUserId and notify toUserId.
+		// Register fromUserID as a follower of toUserID and notify toUserID.
 		eh.userHandler.Follow(e.fromUserID, e.toUserID)
 		eh.userHandler.NotifyUser(e.toUserID, e.rawEvent)
 	case unfollow:
-		// Remove fromUserId from toUserId's followers.
+		// Remove fromUserID from toUserID's followers.
 		eh.userHandler.Unfollow(e.fromUserID, e.toUserID)
 	case broadcast:
 		// Notify all connected users.
@@ -195,10 +195,10 @@ func (eh *EventHandler) processEvent(e *Event) {
 			eh.userHandler.NotifyUser(u, e.rawEvent)
 		}
 	case privateMsg:
-		// Notify toUserId.
+		// Notify toUserID.
 		eh.userHandler.NotifyUser(e.toUserID, e.rawEvent)
 	case statusUpdate:
-		// Notify all followers of fromUserId.
+		// Notify all followers of fromUserID.
 		for _, u := range eh.userHandler.Followers(e.fromUserID) {
 			eh.userHandler.NotifyUser(u, e.rawEvent)
 		}
