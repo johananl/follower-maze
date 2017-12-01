@@ -21,7 +21,7 @@ type User struct {
 // server, sending events to users and updating their followers status.
 // Both the Users and the followers fields store data in a map for efficient lookups. The followers
 // map has a mutex lock since multiple goroutines access it concurrently for both read and write
-// operations. The users map doesn't need a lock since access to it is regulated by a channel.
+// operations.
 type UserHandler struct {
 	Users     map[int]net.Conn
 	uLock     sync.RWMutex
@@ -47,7 +47,7 @@ func (uh *UserHandler) AcceptUsers(l net.Listener) {
 	}
 }
 
-// Reads a user ID from the TCP connection and sends a User struct over the channel.
+// Reads a user ID from the TCP connection and registers the user.
 func (uh *UserHandler) handleUser(conn net.Conn) {
 	// Close connection when done reading.
 	defer func() {
