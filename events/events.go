@@ -41,22 +41,18 @@ type EventHandler struct {
 	userHandler  *userclients.UserHandler
 }
 
-// AcceptEvents accepts TCP connections from event sources and triggers handling of messages over
-// these connections.
-func (eh *EventHandler) AcceptEvents(l net.Listener) {
+// AcceptEvents accepts TCP connections from event sources and returns net.Conn structs.
+func (eh *EventHandler) AcceptEvents(l net.Listener, ch chan net.Conn) {
 	// Continually accept event connections. This loop iterates every time a new connection from an
 	// event source is received and blocks at Accept().
 	for {
-		c, err := l.Accept()
+		conn, err := l.Accept()
 		if err != nil {
 			log.Println("Error accepting:", err.Error())
 			continue
 		}
 
-		// We could actually block here since we're handling only one event source, however
-		// executing handleEvents() as a separate goroutine provides automatic support for multiple
-		// event sources concurrently, should this become a requirement in the future.
-		go eh.handleEvents(c)
+		ch <- conn
 	}
 }
 
