@@ -35,9 +35,9 @@ type UserHandler struct {
 	fLock     sync.RWMutex
 }
 
-// AcceptConnections accepts TCP connections from user clients and triggers registration for them.
 // TODO Send connections back over a channel instead of invoking handleUser from here.
 func (uh *UserHandler) AcceptConnections(l net.Listener) {
+// AcceptConnections accepts TCP connections from user clients and sends back net.Conn structs.
 	// Continually accept client connections. This loop iterates every time a new connection from
 	// a user client is received and blocks at Accept().
 	for {

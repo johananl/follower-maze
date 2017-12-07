@@ -48,8 +48,8 @@ type EventHandler struct {
 	userHandler  *userclients.UserHandler
 }
 
-// AcceptConnections accepts TCP connections from event sources and returns net.Conn structs.
 func (eh *EventHandler) AcceptConnections(l net.Listener, ch chan net.Conn) {
+// AcceptConnections accepts TCP connections from event sources and sends back net.Conn structs.
 	// Continually accept event connections. This loop iterates every time a new connection from an
 	// event source is received and blocks at Accept().
 	for {
