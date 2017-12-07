@@ -6,10 +6,17 @@ import (
 	"io"
 	"log"
 	"net"
+	"os"
 	"regexp"
 	"strconv"
 
 	"bitbucket.org/johananl/follower-maze/userclients"
+)
+
+// Server config
+const (
+	host = "localhost"
+	port = "9090"
 )
 
 // Valid event types
@@ -222,7 +229,19 @@ func NewEventHandler(qm *QueueManager, uh *userclients.UserHandler) *EventHandle
 }
 
 // Run starts the event handler.
-func (eh *EventHandler) Run(l net.Listener) {
+func (eh *EventHandler) Run() {
+	// Initialize event source listener
+	l, err := net.Listen("tcp", host+":"+port)
+	if err != nil {
+		log.Println("Error listening for events:", err.Error())
+		os.Exit(1)
+	}
+	defer func() {
+		log.Println("Closing event listener")
+		l.Close()
+	}()
+	log.Println("Listening for events on " + host + ":" + port)
+
 	ch := make(chan net.Conn)
 	go eh.AcceptConnections(l, ch)
 	for c := range ch {
