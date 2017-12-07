@@ -1,6 +1,7 @@
 package events
 
 import (
+	"net"
 	"reflect"
 	"testing"
 
@@ -89,5 +90,33 @@ func TestPopEvent(t *testing.T) {
 	}
 	if qm.queue.Len() != 0 {
 		t.Fatalf("Popped event not deleted from queue")
+	}
+}
+
+// TestAcceptEvents ensures that AcceptEvents successfully returns net.Conn structs for TCP
+// connections received from a listener.
+func TestAcceptEvents(t *testing.T) {
+	l, err := net.Listen("tcp", "localhost:9090")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+
+	ch := make(chan net.Conn)
+	go eh.AcceptEvents(l, ch)
+	cConn, err := net.Dial("tcp", "localhost:9090")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cConn.Close()
+
+	sConn := <-ch
+	defer sConn.Close()
+
+	if cConn.LocalAddr().String() != sConn.RemoteAddr().String() {
+		t.Fatalf(
+			"Invalid connection received: %v != %v",
+			cConn.LocalAddr().String(), sConn.RemoteAddr().String(),
+		)
 	}
 }
