@@ -220,3 +220,12 @@ func (eh *EventHandler) flushQueue(qm *QueueManager) {
 func NewEventHandler(qm *QueueManager, uh *userclients.UserHandler) *EventHandler {
 	return &EventHandler{qm, uh}
 }
+
+// Run starts the event handler.
+func (eh *EventHandler) Run(l net.Listener) {
+	ch := make(chan net.Conn)
+	go eh.AcceptConnections(l, ch)
+	for c := range ch {
+		eh.handleEvents(c)
+	}
+}

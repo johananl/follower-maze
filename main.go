@@ -53,6 +53,6 @@ func main() {
 	log.Println("Listening for user clients on " + host + ":" + userClientsPort)
 
 	// Handle events and users concurrently (acceptUsers runs in the main goroutine)
-	go eh.AcceptEvents(es)
+	go eh.Run(es)
 	uh.AcceptUsers(uc)
 }
