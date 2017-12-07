@@ -234,6 +234,7 @@ func (eh *EventHandler) Run() {
 	l, err := net.Listen("tcp", host+":"+port)
 	if err != nil {
 		log.Println("Error listening for events:", err.Error())
+		// TODO Replace os.Exit()
 		os.Exit(1)
 	}
 	defer func() {

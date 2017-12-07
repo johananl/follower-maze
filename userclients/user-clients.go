@@ -5,9 +5,15 @@ import (
 	"io"
 	"log"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
+)
+
+const (
+	host = "localhost"
+	port = "9099"
 )
 
 // User represents a user client that is connected to the server. id is the user's ID and conn is
@@ -126,4 +132,22 @@ func NewUserHandler() *UserHandler {
 		Users:     make(map[int]net.Conn),
 		followers: make(map[int][]int),
 	}
+}
+
+// Run starts the user handler.
+func (uh *UserHandler) Run() {
+	// Initialize user clients listener
+	l, err := net.Listen("tcp", host+":"+port)
+	if err != nil {
+		log.Println("Error listening for clients:", err.Error())
+		// TODO Replace os.Exit()
+		os.Exit(1)
+	}
+	defer func() {
+		log.Println("Closing client listener")
+		l.Close()
+	}()
+	log.Println("Listening for user clients on " + host + ":" + port)
+
+	uh.AcceptConnections(l)
 }
