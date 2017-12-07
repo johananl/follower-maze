@@ -29,9 +29,9 @@ type UserHandler struct {
 	fLock     sync.RWMutex
 }
 
-// AcceptUsers accepts TCP connections from user clients and triggers registration for them.
+// AcceptConnections accepts TCP connections from user clients and triggers registration for them.
 // TODO Send connections back over a channel instead of invoking handleUser from here.
-func (uh *UserHandler) AcceptUsers(l net.Listener) {
+func (uh *UserHandler) AcceptConnections(l net.Listener) {
 	// Continually accept client connections. This loop iterates every time a new connection from
 	// a user client is received and blocks at Accept().
 	for {
