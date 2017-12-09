@@ -35,21 +35,19 @@ type UserHandler struct {
 	fLock     sync.RWMutex
 }
 
-// TODO Send connections back over a channel instead of invoking handleUser from here.
-func (uh *UserHandler) AcceptConnections(l net.Listener) {
 // AcceptConnections accepts TCP connections from user clients and sends back net.Conn structs.
+func (uh *UserHandler) AcceptConnections(l net.Listener, ch chan<- net.Conn) {
 	// Continually accept client connections. This loop iterates every time a new connection from
 	// a user client is received and blocks at Accept().
 	for {
-		c, err := l.Accept()
+		conn, err := l.Accept()
 		if err != nil {
 			log.Println("Error accepting:", err.Error())
 			continue
 		}
+		log.Printf("Accepted a client connection from %v", conn.RemoteAddr())
 
-		log.Printf("Accepted a client connection from %v", c.RemoteAddr())
-
-		go uh.handleUser(c)
+		ch <- conn
 	}
 }
 
@@ -149,5 +147,9 @@ func (uh *UserHandler) Run() {
 	}()
 	log.Println("Listening for user clients on " + host + ":" + port)
 
-	uh.AcceptConnections(l)
+	ch := make(chan net.Conn)
+	go uh.AcceptConnections(l, ch)
+	for c := range ch {
+		go uh.handleUser(c)
+	}
 }
