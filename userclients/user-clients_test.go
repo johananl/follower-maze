@@ -10,6 +10,7 @@ var uh = NewUserHandler()
 func TestRegisterUser(t *testing.T) {
 	// Fake connection for testing
 	conn, _ := net.Pipe()
+	defer conn.Close()
 	u := User{100, conn}
 
 	uh.registerUser(u)
