@@ -56,36 +56,39 @@ func (uh *UserHandler) AcceptConnections(l net.Listener) <-chan net.Conn {
 }
 
 // Reads a user ID from the TCP connection and registers the user.
-func (uh *UserHandler) handleUser(conn net.Conn, ch chan<- User) {
-	// Close connection when done reading.
-	defer func() {
-		log.Printf("Closing client connection at %v\n", conn.RemoteAddr())
-		conn.Close()
-	}()
+func (uh *UserHandler) handleUser(conn net.Conn) <-chan User {
+	ch := make(chan User)
+	go func() {
+		// Close connection when done reading.
+		defer func() {
+			log.Printf("Closing client connection at %v\n", conn.RemoteAddr())
+			conn.Close()
+		}()
 
-	// This loop iterates every time a newline-delimited string is read from
-	// the TCP connection.
-	br := bufio.NewReader(conn)
-	for {
-		message, err := br.ReadString('\n')
-		if err != nil {
-			if err == io.EOF {
-				break
+		br := bufio.NewReader(conn)
+		// This loop iterates every time a newline-delimited string is read from
+		// the TCP connection.
+		for {
+			message, err := br.ReadString('\n')
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
+				log.Println("Error reading client request:", err.Error())
+				continue
 			}
-			log.Println("Error reading client request:", err.Error())
-			continue
-		}
 
-		// Parse user ID
-		userID, err := strconv.Atoi(strings.TrimSpace(message))
-		if err != nil {
-			log.Printf("Invalid user ID %d: %s", userID, err.Error())
-			continue
-		}
+			// Parse user ID
+			userID, err := strconv.Atoi(strings.TrimSpace(message))
+			if err != nil {
+				log.Printf("Invalid user ID %d: %s", userID, err.Error())
+				continue
+			}
 
-		ch <- User{userID, conn}
-		// uh.registerUser(User{userID, conn})
-	}
+			ch <- User{userID, conn}
+		}
+	}()
+	return ch
 }
 
 // registerUser maps a user ID to a connection.
@@ -154,8 +157,7 @@ func (uh *UserHandler) Run() {
 
 	connections := uh.AcceptConnections(l)
 	for c := range connections {
-		uch := make(chan User)
-		go uh.handleUser(c, uch)
+		uch := uh.handleUser(c)
 		u := <-uch
 		uh.registerUser(u)
 	}
