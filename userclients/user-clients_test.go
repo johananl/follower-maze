@@ -29,15 +29,15 @@ func TestAcceptConnections(t *testing.T) {
 	}
 	defer l.Close()
 
-	ch := make(chan net.Conn)
-	go uh.AcceptConnections(l, ch)
+	conns := uh.AcceptConnections(l)
+
 	cConn, err := net.Dial("tcp", "localhost:9099")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer cConn.Close()
 
-	sConn := <-ch
+	sConn := <-conns
 	defer sConn.Close()
 
 	if cConn.LocalAddr().String() != sConn.RemoteAddr().String() {

@@ -36,19 +36,23 @@ type UserHandler struct {
 }
 
 // AcceptConnections accepts TCP connections from user clients and sends back net.Conn structs.
-func (uh *UserHandler) AcceptConnections(l net.Listener, ch chan<- net.Conn) {
-	// Continually accept client connections. This loop iterates every time a new connection from
-	// a user client is received and blocks at Accept().
-	for {
-		conn, err := l.Accept()
-		if err != nil {
-			log.Println("Error accepting:", err.Error())
-			continue
-		}
-		log.Printf("Accepted a client connection from %v", conn.RemoteAddr())
+func (uh *UserHandler) AcceptConnections(l net.Listener) <-chan net.Conn {
+	ch := make(chan net.Conn)
+	go func() {
+		// Continually accept client connections. This loop iterates every time a new connection from
+		// a user client is received and blocks at Accept().
+		for {
+			conn, err := l.Accept()
+			if err != nil {
+				log.Println("Error accepting:", err.Error())
+				continue
+			}
+			log.Printf("Accepted a client connection from %v", conn.RemoteAddr())
 
-		ch <- conn
-	}
+			ch <- conn
+		}
+	}()
+	return ch
 }
 
 // Reads a user ID from the TCP connection and registers the user.
@@ -148,8 +152,7 @@ func (uh *UserHandler) Run() {
 	}()
 	log.Println("Listening for user clients on " + host + ":" + port)
 
-	connections := make(chan net.Conn)
-	go uh.AcceptConnections(l, connections)
+	connections := uh.AcceptConnections(l)
 	for c := range connections {
 		uch := make(chan User)
 		go uh.handleUser(c, uch)
