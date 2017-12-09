@@ -49,18 +49,23 @@ type EventHandler struct {
 }
 
 // AcceptConnections accepts TCP connections from event sources and sends back net.Conn structs.
-func (eh *EventHandler) AcceptConnections(l net.Listener, ch chan<- net.Conn) {
-	// Continually accept event connections. This loop iterates every time a new connection from an
-	// event source is received and blocks at Accept().
-	for {
-		conn, err := l.Accept()
-		if err != nil {
-			log.Println("Error accepting:", err.Error())
-			continue
-		}
+func (eh *EventHandler) AcceptConnections(l net.Listener) <-chan net.Conn {
+	ch := make(chan net.Conn)
+	go func() {
+		defer close(ch)
+		// Continually accept event connections. This loop iterates every time a new connection from an
+		// event source is received and blocks at Accept().
+		for {
+			conn, err := l.Accept()
+			if err != nil {
+				log.Println("Error accepting:", err.Error())
+				continue
+			}
 
-		ch <- conn
-	}
+			ch <- conn
+		}
+	}()
+	return ch
 }
 
 // Reads a stream of events from a TCP connection and stores them in a priority queue.
@@ -243,9 +248,8 @@ func (eh *EventHandler) Run() {
 	}()
 	log.Println("Listening for events on " + host + ":" + port)
 
-	ch := make(chan net.Conn)
-	go eh.AcceptConnections(l, ch)
-	for c := range ch {
+	conns := eh.AcceptConnections(l)
+	for c := range conns {
 		eh.handleEvents(c)
 	}
 }
