@@ -47,3 +47,25 @@ func TestAcceptConnections(t *testing.T) {
 		)
 	}
 }
+
+// TestHandleUser ensures that the handleUser function correctly receives a connection and sends
+// back a User over the channel.
+func TestHandleUser(t *testing.T) {
+	// This pipe is used to write over the connection that is fed to handleUser.
+	a, b := net.Pipe()
+
+	// Run handleUser in a goroutine.
+	ch := make(chan User)
+	go uh.handleUser(a, ch)
+
+	// Send a user ID over the connection.
+	b.Write([]byte("123\n"))
+
+	// Get a User struct back over the channel.
+	u := <-ch
+
+	// Verify the user ID is the one we sent.
+	if u.id != 123 {
+		t.Fatalf("Invalid user ID: got %v, want 123", u.id)
+	}
+}

@@ -52,7 +52,7 @@ func (uh *UserHandler) AcceptConnections(l net.Listener, ch chan<- net.Conn) {
 }
 
 // Reads a user ID from the TCP connection and registers the user.
-func (uh *UserHandler) handleUser(conn net.Conn) {
+func (uh *UserHandler) handleUser(conn net.Conn, ch chan<- User) {
 	// Close connection when done reading.
 	defer func() {
 		log.Printf("Closing client connection at %v\n", conn.RemoteAddr())
@@ -79,7 +79,8 @@ func (uh *UserHandler) handleUser(conn net.Conn) {
 			continue
 		}
 
-		uh.registerUser(User{userID, conn})
+		ch <- User{userID, conn}
+		// uh.registerUser(User{userID, conn})
 	}
 }
 
@@ -147,9 +148,12 @@ func (uh *UserHandler) Run() {
 	}()
 	log.Println("Listening for user clients on " + host + ":" + port)
 
-	ch := make(chan net.Conn)
-	go uh.AcceptConnections(l, ch)
-	for c := range ch {
-		go uh.handleUser(c)
+	connections := make(chan net.Conn)
+	go uh.AcceptConnections(l, connections)
+	for c := range connections {
+		uch := make(chan User)
+		go uh.handleUser(c, uch)
+		u := <-uch
+		uh.registerUser(u)
 	}
 }
