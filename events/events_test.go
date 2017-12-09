@@ -96,7 +96,6 @@ func TestPopEvent(t *testing.T) {
 // TestAcceptConnections ensures that AcceptConnections successfully returns net.Conn structs for TCP
 // connections received from a listener.
 func TestAcceptConnections(t *testing.T) {
-	// Init listener.
 	l, err := net.Listen("tcp", "localhost:9090")
 	if err != nil {
 		t.Fatal(err)
