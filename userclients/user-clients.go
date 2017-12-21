@@ -101,6 +101,8 @@ func (uh *UserHandler) registerUser(u User) {
 // NotifyUser sends a string-encoded event to a user.
 func (uh *UserHandler) NotifyUser(id int, message string) {
 	// Get connection by user ID. No need to lock here as long as we have just one event source.
+	uh.uLock.RLock()
+	defer uh.uLock.RUnlock()
 	if c, ok := uh.Users[id]; ok {
 		c.Write([]byte(message))
 	}
