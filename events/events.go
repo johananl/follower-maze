@@ -109,15 +109,7 @@ func (eh *EventHandler) handleEvents(conn net.Conn) <-chan Event {
 				continue // Skip this event and move to the next one.
 			}
 
-			// Event looks good. Count it and put it in the queue.
 			totalReceived++
-			// eh.queueManager.queueEvent(event)
-
-			// If we have enough events in the queue, process the top event.
-			// if eh.queueManager.queue.Len() > eventQueueSize {
-			// 	eh.processEvent(eh.queueManager.popEvent())
-			// }
-
 			ch <- *event
 		}
 	}()
@@ -135,6 +127,7 @@ var pPattern = regexp.MustCompile(`^(\d+)\|P\|(\d+)\|(\d+)\n$`)
 var sPattern = regexp.MustCompile(`^(\d+)\|S\|(\d+)\n$`)
 
 // ParseEvent gets a string and returns an Event or an error.
+// TODO Is it OK to return a pointer here?
 func (eh *EventHandler) ParseEvent(e string) (*Event, error) {
 
 	var result *Event
@@ -258,6 +251,15 @@ func (eh *EventHandler) Run() {
 
 	conns := eh.AcceptConnections(l)
 	for c := range conns {
-		eh.handleEvents(c)
+		events := eh.handleEvents(c)
+		for e := range events {
+			// Event looks good. Count it and put it in the queue.
+			eh.queueManager.queueEvent(&e)
+
+			// If we have enough events in the queue, process the top event.
+			if eh.queueManager.queue.Len() > eventQueueSize {
+				eh.processEvent(eh.queueManager.popEvent())
+			}
+		}
 	}
 }
