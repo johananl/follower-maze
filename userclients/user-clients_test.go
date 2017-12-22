@@ -52,12 +52,12 @@ func TestAcceptConnections(t *testing.T) {
 // back a User over the channel.
 func TestHandleUser(t *testing.T) {
 	// This pipe is used to write over the connection that is fed to handleUser.
-	a, b := net.Pipe()
+	client, server := net.Pipe()
 
-	ch := uh.handleUser(a)
+	ch := uh.handleUser(server)
 
 	// Send a user ID over the connection.
-	b.Write([]byte("123\n"))
+	client.Write([]byte("123\n"))
 
 	// Get a User struct back over the channel.
 	u := <-ch
