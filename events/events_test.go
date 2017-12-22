@@ -120,3 +120,22 @@ func TestAcceptConnections(t *testing.T) {
 		)
 	}
 }
+
+// TestHandleEvents ensures that HandleEvents successfully returns Events from a given connection.
+func TestHandleEvents(t *testing.T) {
+	client, server := net.Pipe()
+
+	events := eh.handleEvents(server)
+
+	s := "666|F|60|50\n"
+	client.Write([]byte(s))
+	e := <-events
+
+	if e.rawEvent != s {
+		t.Errorf("Wrong raw event: got %v, want %v", e.rawEvent, s)
+	}
+
+	if e.sequence != 666 {
+		t.Errorf("Wrong sequence: got %v, want %v", e.sequence, 666)
+	}
+}
