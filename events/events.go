@@ -256,7 +256,6 @@ func (eh *EventHandler) Run() {
 	for c := range conns {
 		events := eh.handleEvents(c)
 		for e := range events {
-			// Event looks good. Count it and put it in the queue.
 			eh.queueManager.queueEvent(&e)
 
 			// If we have enough events in the queue, process the top event.
