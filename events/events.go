@@ -223,6 +223,9 @@ func (eh *EventHandler) processEvent(e *Event) {
 // Empties the queue by processing all remaining messages. This method is called once the event
 // source connection has been closed.
 func (eh *EventHandler) flushQueue(qm *QueueManager) {
+	qm.lock.RLock()
+	defer qm.lock.RUnlock()
+
 	for qm.queue.Len() > 0 {
 		eh.processEvent(qm.popEvent())
 	}
