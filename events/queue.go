@@ -15,24 +15,54 @@ const eventQueueSize = 200
 // data structure for event ordering. A heap provides a good solution here since it employs
 // efficient sorting upon insertion as well as quick retrieval at a constant time.
 type QueueManager struct {
-	queue *PriorityQueue
-	lock  sync.RWMutex
+	queue  *PriorityQueue
+	lock   sync.RWMutex
+	input  chan *Event
+	output chan *Event
 }
 
-// Stores an event in the queue.
-func (qm *QueueManager) queueEvent(e *Event) {
+// queueEvents starts a goroutine which stores incoming events in the queue. This method is
+// regulated by a channel to allow safe writes to the queue from multiple sources.
+func (qm *QueueManager) queueEvents() {
+	go func() {
+		for e := range qm.input {
+			heap.Push(qm.queue, e)
+		}
+	}()
 	// This lock isn't necessary as long as there is just one event source since there is no chance
 	// for concurrent access to the queue.
-	qm.lock.Lock()
-	defer qm.lock.Unlock()
-	heap.Push(qm.queue, e)
+	// qm.lock.Lock()
+	// defer qm.lock.Unlock()
+
+	// heap.Push(qm.queue, e)
+
+	// If we have enough events in the queue, process the top event.
+	// if qm.queue.Len() > eventQueueSize {
+	// 	eh.processEvent(eh.queueManager.popEvent())
+	// }
 }
 
-// Returns the top (first) event in the queue and deletes it from the queue.
-func (qm *QueueManager) popEvent() *Event {
-	qm.lock.RLock()
-	defer qm.lock.RUnlock()
-	return heap.Pop(qm.queue).(*Event)
+// TODO
+func (qm *QueueManager) popEvents() {
+	// qm.lock.RLock()
+	// defer qm.lock.RUnlock()
+	// return heap.Pop(qm.queue).(*Event)
+
+	go func() {
+		for {
+			if qm.queue.Len() > 0 {
+				qm.output <- heap.Pop(qm.queue).(*Event)
+			}
+		}
+	}()
+}
+
+// Start starts the goroutines for storing and retrieving events.
+func (qm *QueueManager) Start() {
+	// TODO Need to serialize access to the queue.
+	// https://husobee.github.io/heaps/golang/safe/2016/09/01/safe-heaps-golang.html
+	qm.queueEvents()
+	qm.popEvents()
 }
 
 // NewQueueManager constructs a new QueueManager and returns a pointer to it. It initializes the
@@ -40,8 +70,10 @@ func (qm *QueueManager) popEvent() *Event {
 func NewQueueManager() *QueueManager {
 	pq := make(PriorityQueue, 0)
 	qm := QueueManager{
-		queue: &pq,
-		lock:  sync.RWMutex{},
+		queue:  &pq,
+		lock:   sync.RWMutex{},
+		input:  make(chan *Event),
+		output: make(chan *Event),
 	}
 	heap.Init(qm.queue)
 

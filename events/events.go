@@ -223,12 +223,12 @@ func (eh *EventHandler) processEvent(e *Event) {
 // Empties the queue by processing all remaining messages. This method is called once the event
 // source connection has been closed.
 func (eh *EventHandler) flushQueue(qm *QueueManager) {
-	qm.lock.RLock()
-	defer qm.lock.RUnlock()
+	// qm.lock.RLock()
+	// defer qm.lock.RUnlock()
 
-	for qm.queue.Len() > 0 {
-		eh.processEvent(qm.popEvent())
-	}
+	// for qm.queue.Len() > 0 {
+	// 	eh.processEvent(qm.popEvent())
+	// }
 }
 
 // NewEventHandler constructs a new EventHandler and returns a pointer to it. It receives a pointer
@@ -254,14 +254,12 @@ func (eh *EventHandler) Run() {
 
 	conns := eh.AcceptConnections(l)
 	for c := range conns {
-		events := eh.handleEvents(c)
-		for e := range events {
-			eh.queueManager.queueEvent(&e)
-
-			// If we have enough events in the queue, process the top event.
-			if eh.queueManager.queue.Len() > eventQueueSize {
-				eh.processEvent(eh.queueManager.popEvent())
+		go func() {
+			events := eh.handleEvents(c)
+			input := eh.queueManager.input
+			for e := range events {
+				input <- &e
 			}
-		}
+		}()
 	}
 }

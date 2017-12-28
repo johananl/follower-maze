@@ -73,17 +73,25 @@ var testEvent = &Event{
 }
 
 func TestQueueEvent(t *testing.T) {
-	qm.queueEvent(testEvent)
+	qm.Start()
+
+	in := qm.input
+	in <- testEvent
 
 	if qm.queue.Len() != 1 {
 		t.Fatalf("Invalid queue length after queueing event: got %d, want %d", qm.queue.Len(), 1)
 	}
-	qm.popEvent()
 }
 
 func TestPopEvent(t *testing.T) {
-	qm.queueEvent(testEvent)
-	e := qm.popEvent()
+	qm.Start()
+
+	in := qm.input
+	out := qm.output
+
+	in <- testEvent
+
+	e := <-out
 
 	if e != testEvent {
 		t.Fatalf("Invalid event popped from queue: got %v, want %v", e, testEvent)
