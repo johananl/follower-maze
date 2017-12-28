@@ -36,7 +36,7 @@ func (qm *QueueManager) popEvent() *Event {
 }
 
 // NewQueueManager constructs a new QueueManager and returns a pointer to it. It initializes the
-// queue's data structure (a min heap) and performs a heapify operation on it.
+// queue's data structure (a min heap) and performs a heapify operation on it before returning.
 func NewQueueManager() *QueueManager {
 	pq := make(PriorityQueue, 0)
 	qm := QueueManager{
