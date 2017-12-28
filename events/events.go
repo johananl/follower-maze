@@ -108,7 +108,7 @@ func (eh *EventHandler) handleEvents(conn net.Conn) {
 
 		// Event looks good. Count it and put it in the queue.
 		totalReceived++
-		eh.queueManager.queueEvent(event)
+		eh.queueManager.pushEvent(event)
 
 		// If we have enough events in the queue, process the top event.
 		if eh.queueManager.queue.Len() > eventQueueSize {

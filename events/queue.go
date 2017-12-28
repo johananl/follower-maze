@@ -2,6 +2,7 @@ package events
 
 import (
 	"container/heap"
+	"fmt"
 	"sync"
 )
 
@@ -19,13 +20,16 @@ type QueueManager struct {
 	lock  sync.RWMutex
 }
 
+var (
+	pushChan = make(chan *Event)
+	popChan  = make(chan *Event)
+	stopChan = make(chan bool)
+)
+
 // Stores an event in the queue.
-func (qm *QueueManager) queueEvent(e *Event) {
-	// This lock isn't necessary as long as there is just one event source since there is no chance
-	// for concurrent access to the queue.
-	qm.lock.Lock()
-	defer qm.lock.Unlock()
-	heap.Push(qm.queue, e)
+func (qm *QueueManager) pushEvent(e *Event) {
+	// TODO why pass Event by reference?
+	pushChan <- e
 }
 
 // Returns the top (first) event in the queue and deletes it from the queue.
@@ -33,6 +37,26 @@ func (qm *QueueManager) popEvent() *Event {
 	qm.lock.RLock()
 	defer qm.lock.RUnlock()
 	return heap.Pop(qm.queue).(*Event)
+}
+
+// Run starts watching for incoming queue operations (push / pop) and performs them in
+// a thread-safe way.
+func (qm *QueueManager) Run() chan bool {
+	go func() {
+		for {
+			select {
+			case pushedEvent := <-pushChan:
+				heap.Push(qm.queue, pushedEvent)
+			case poppedEvent := <-popChan:
+				// TODO
+				fmt.Printf("Popped event: %v", poppedEvent)
+			case <-stopChan:
+				return
+			}
+		}
+	}()
+
+	return stopChan
 }
 
 // NewQueueManager constructs a new QueueManager and returns a pointer to it. It initializes the
