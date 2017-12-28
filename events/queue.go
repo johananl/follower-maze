@@ -2,7 +2,6 @@ package events
 
 import (
 	"container/heap"
-	"fmt"
 	"sync"
 )
 
@@ -22,7 +21,7 @@ type QueueManager struct {
 
 var (
 	pushChan = make(chan *Event)
-	popChan  = make(chan *Event)
+	popChan  = make(chan chan *Event)
 	stopChan = make(chan bool)
 )
 
@@ -34,22 +33,23 @@ func (qm *QueueManager) pushEvent(e *Event) {
 
 // Returns the top (first) event in the queue and deletes it from the queue.
 func (qm *QueueManager) popEvent() *Event {
-	qm.lock.RLock()
-	defer qm.lock.RUnlock()
-	return heap.Pop(qm.queue).(*Event)
+	result := make(chan *Event)
+	popChan <- result
+
+	return <-result
 }
 
 // Run starts watching for incoming queue operations (push / pop) and performs them in
-// a thread-safe way.
+// a thread-safe way. Selecting between push and pop operations serializes access to the
+// queue, thus guaranteeing safety.
 func (qm *QueueManager) Run() chan bool {
 	go func() {
 		for {
 			select {
-			case pushedEvent := <-pushChan:
-				heap.Push(qm.queue, pushedEvent)
-			case poppedEvent := <-popChan:
-				// TODO
-				fmt.Printf("Popped event: %v", poppedEvent)
+			case push := <-pushChan:
+				heap.Push(qm.queue, push)
+			case pop := <-popChan:
+				pop <- heap.Pop(qm.queue).(*Event)
 			case <-stopChan:
 				return
 			}
