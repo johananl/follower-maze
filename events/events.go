@@ -235,6 +235,12 @@ func NewEventHandler(qm *QueueManager, uh *userclients.UserHandler) *EventHandle
 
 // Run starts the event handler.
 func (eh *EventHandler) Run() {
+	// Start queue
+	stopQueue := eh.queueManager.Run()
+	defer func() {
+		stopQueue <- true
+	}()
+
 	// Initialize event source listener
 	l, err := net.Listen("tcp", host+":"+port)
 	if err != nil {

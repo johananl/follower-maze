@@ -2,6 +2,7 @@ package events
 
 import (
 	"container/heap"
+	"log"
 	"sync"
 )
 
@@ -53,7 +54,11 @@ func (qm *QueueManager) queueLength() int {
 // a thread-safe way. Selecting between push and pop operations serializes access to the
 // queue, thus guaranteeing safety.
 func (qm *QueueManager) Run() chan bool {
+	log.Println("Starting queue")
 	go func() {
+		defer func() {
+			log.Println("Stopping queue")
+		}()
 		for {
 			select {
 			case push := <-pushChan:
