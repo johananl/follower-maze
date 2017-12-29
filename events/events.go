@@ -111,7 +111,7 @@ func (eh *EventHandler) handleEvents(conn net.Conn) {
 		eh.queueManager.pushEvent(event)
 
 		// If we have enough events in the queue, process the top event.
-		if eh.queueManager.queue.Len() > eventQueueSize {
+		if eh.queueManager.queueLength() > eventQueueSize {
 			eh.processEvent(eh.queueManager.popEvent())
 		}
 	}
