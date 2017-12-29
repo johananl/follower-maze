@@ -22,6 +22,7 @@ type QueueManager struct {
 var (
 	pushChan = make(chan *Event)
 	popChan  = make(chan chan *Event)
+	lenChan  = make(chan chan int)
 	stopChan = make(chan bool)
 )
 
@@ -39,6 +40,14 @@ func (qm *QueueManager) popEvent() *Event {
 	return <-result
 }
 
+// Len returns the length of the queue.
+func (qm *QueueManager) queueLength() int {
+	result := make(chan int)
+	lenChan <- result
+
+	return <-result
+}
+
 // Run starts watching for incoming queue operations (push / pop) and performs them in
 // a thread-safe way. Selecting between push and pop operations serializes access to the
 // queue, thus guaranteeing safety.
@@ -50,6 +59,8 @@ func (qm *QueueManager) Run() chan bool {
 				heap.Push(qm.queue, push)
 			case pop := <-popChan:
 				pop <- heap.Pop(qm.queue).(*Event)
+			case len := <-lenChan:
+				len <- qm.queue.Len()
 			case <-stopChan:
 				return
 			}

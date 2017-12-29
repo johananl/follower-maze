@@ -77,12 +77,12 @@ func TestPushEvent(t *testing.T) {
 
 	qm.pushEvent(testEvent)
 
-	stop <- true
-
-	if qm.queue.Len() != 1 {
+	if qm.queueLength() != 1 {
 		t.Fatalf("Invalid queue length after queueing event: got %d, want %d", qm.queue.Len(), 1)
 	}
-	// qm.popEvent()
+
+	qm.popEvent()
+	stop <- true
 }
 
 func TestPopEvent(t *testing.T) {
@@ -91,14 +91,14 @@ func TestPopEvent(t *testing.T) {
 
 	e := qm.popEvent()
 
-	stop <- true
-
 	if e != testEvent {
 		t.Fatalf("Invalid event popped from queue: got %v, want %v", e, testEvent)
 	}
-	if qm.queue.Len() != 0 {
+	if qm.queueLength() != 0 {
 		t.Fatalf("Popped event not deleted from queue")
 	}
+
+	stop <- true
 }
 
 // TestAcceptConnections ensures that AcceptConnections successfully returns net.Conn structs for TCP
