@@ -40,7 +40,8 @@ func (qm *QueueManager) popEvent() *Event {
 	return <-result
 }
 
-// Len returns the length of the queue.
+// queueLength returns the length of the queue. This function is used mainly for validating queue
+// length during tests.
 func (qm *QueueManager) queueLength() int {
 	result := make(chan int)
 	lenChan <- result
