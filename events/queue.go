@@ -59,6 +59,7 @@ func (qm *QueueManager) Run() chan bool {
 		defer func() {
 			log.Println("Stopping queue")
 		}()
+
 		for {
 			select {
 			case push := <-pushChan:
