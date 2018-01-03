@@ -58,9 +58,10 @@ func (eh *EventHandler) AcceptConnections(l net.Listener) <-chan net.Conn {
 		for {
 			conn, err := l.Accept()
 			if err != nil {
-				log.Println("Error accepting:", err.Error())
+				log.Println("Error accepting event connection:", err.Error())
 				continue
 			}
+			log.Printf("Accepted an event connection from %v", conn.RemoteAddr())
 
 			ch <- conn
 		}

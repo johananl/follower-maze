@@ -44,10 +44,10 @@ func (uh *UserHandler) AcceptConnections(l net.Listener) <-chan net.Conn {
 		for {
 			conn, err := l.Accept()
 			if err != nil {
-				log.Println("Error accepting:", err.Error())
+				log.Println("Error accepting user connection:", err.Error())
 				continue
 			}
-			log.Printf("Accepted a client connection from %v", conn.RemoteAddr())
+			log.Printf("Accepted a user connection from %v", conn.RemoteAddr())
 
 			ch <- conn
 		}
@@ -61,7 +61,7 @@ func (uh *UserHandler) handleUser(conn net.Conn) <-chan User {
 	go func() {
 		// Close connection when done reading.
 		defer func() {
-			log.Printf("Closing client connection at %v\n", conn.RemoteAddr())
+			log.Printf("Closing user connection at %v\n", conn.RemoteAddr())
 			conn.Close()
 		}()
 
@@ -74,7 +74,7 @@ func (uh *UserHandler) handleUser(conn net.Conn) <-chan User {
 				if err == io.EOF {
 					break
 				}
-				log.Println("Error reading client request:", err.Error())
+				log.Println("Error reading user request:", err.Error())
 				continue
 			}
 
@@ -147,12 +147,12 @@ func (uh *UserHandler) Run() {
 	// Initialize user clients listener
 	l, err := net.Listen("tcp", host+":"+port)
 	if err != nil {
-		log.Println("Error listening for clients:", err.Error())
+		log.Println("Error listening for users:", err.Error())
 		// TODO Replace os.Exit()
 		os.Exit(1)
 	}
 	defer func() {
-		log.Println("Closing client listener")
+		log.Println("Closing user listener")
 		l.Close()
 	}()
 	log.Println("Listening for user clients on " + host + ":" + port)
