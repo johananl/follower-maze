@@ -39,7 +39,7 @@ type UserHandler struct {
 func (uh *UserHandler) AcceptConnections(l net.Listener) <-chan net.Conn {
 	ch := make(chan net.Conn)
 	go func() {
-		// Continually accept client connections. This loop iterates every time a new connection from
+		// Continually accept user connections. This loop iterates every time a new connection from
 		// a user client is received and blocks at Accept().
 		for {
 			conn, err := l.Accept()
