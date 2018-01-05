@@ -41,6 +41,9 @@ var badEvents = []string{
 	"666|F|60|50|",
 	"666|F|60||50",
 	"",
+	" ",
+	"(&*(^*&^$$#",
+	"ばか猫",
 }
 
 func TestParseEvent(t *testing.T) {
