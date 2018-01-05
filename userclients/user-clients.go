@@ -36,23 +36,34 @@ type UserHandler struct {
 }
 
 // AcceptConnections accepts TCP connections from user clients and sends back net.Conn structs.
-func (uh *UserHandler) AcceptConnections(l net.Listener) <-chan net.Conn {
+func (uh *UserHandler) AcceptConnections(l net.Listener) (<-chan net.Conn, chan bool) {
 	ch := make(chan net.Conn)
+	quit := make(chan bool)
+
 	go func() {
 		// Continually accept user connections. This loop iterates every time a new connection from
 		// a user client is received and blocks at Accept().
 		for {
+			// TODO Need to gracefully terminate this goroutine to prevent accepting on a closed
+			// listener.
 			conn, err := l.Accept()
 			if err != nil {
 				log.Println("Error accepting user connection:", err.Error())
-				continue
+
+				select {
+				case <-quit:
+					log.Println("Received quit signal - stopping to listen for user connections")
+					return
+				default:
+				}
 			}
 			log.Printf("Accepted a user connection from %v", conn.RemoteAddr())
 
 			ch <- conn
 		}
 	}()
-	return ch
+
+	return ch, quit
 }
 
 // Reads a user ID from the TCP connection and registers the user.
@@ -157,7 +168,9 @@ func (uh *UserHandler) Run() {
 	}()
 	log.Println("Listening for user clients on " + host + ":" + port)
 
-	connections := uh.AcceptConnections(l)
+	connections, quit := uh.AcceptConnections(l)
+	defer close(quit)
+
 	for c := range connections {
 		uch := uh.handleUser(c)
 		u := <-uch

@@ -23,4 +23,6 @@ func main() {
 	// Handle events and users concurrently (acceptUsers runs in the main goroutine)
 	go eh.Run()
 	uh.Run()
+
+	// TODO Handle graceful shutdown
 }
