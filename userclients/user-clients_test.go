@@ -54,6 +54,10 @@ func TestAcceptConnections(t *testing.T) {
 func TestHandleUser(t *testing.T) {
 	// This pipe is used to write over the connection that is fed to handleUser.
 	client, server := net.Pipe()
+	defer func() {
+		client.Close()
+		server.Close()
+	}()
 
 	ch := uh.handleUser(server)
 
