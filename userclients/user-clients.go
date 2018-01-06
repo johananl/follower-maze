@@ -41,6 +41,7 @@ func (uh *UserHandler) AcceptConnections(l net.Listener) (<-chan net.Conn, chan 
 	quit := make(chan bool)
 
 	go func() {
+		defer close(ch)
 		// Continually accept user connections. This loop iterates every time a new connection from
 		// a user client is received and blocks at Accept().
 		for {
