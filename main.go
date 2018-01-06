@@ -25,7 +25,7 @@ func main() {
 	eh := events.NewEventHandler(qm, uh)
 
 	// Handle events and users concurrently
-	go eh.Run()
+	stopEventHandler := eh.Run()
 	stopUserHandler := uh.Run()
 
 	// Listen for SIGINT and shutdown gracefully
@@ -37,6 +37,7 @@ func main() {
 	log.Println("SIGINT received - shutting down")
 
 	// TODO Cleanup & wait for shutdown
+	stopEventHandler <- true
 	stopUserHandler <- true
 
 	log.Println("Graceful shutdown complete")

@@ -254,39 +254,53 @@ func NewEventHandler(qm *QueueManager, uh *userclients.UserHandler) *EventHandle
 }
 
 // Run starts the event handler.
-func (eh *EventHandler) Run() {
+func (eh *EventHandler) Run() chan<- bool {
 	// TODO Graceful shutdown
-	// Start queue
-	stopQueue := eh.queueManager.Run()
-	defer func() {
-		stopQueue <- true
-	}()
+	quit := make(chan bool)
 
-	// Initialize event source listener
-	l, err := net.Listen("tcp", host+":"+port)
-	if err != nil {
-		log.Println("Error listening for events:", err.Error())
-		// TODO Replace os.Exit()
-		os.Exit(1)
-	}
-	defer func() {
-		log.Println("Closing event listener")
-		l.Close()
-	}()
+	go func() {
+		// Start queue
+		stopQueue := eh.queueManager.Run()
+		defer func() {
+			stopQueue <- true
+		}()
 
-	log.Println("Listening for events on " + host + ":" + port)
+		// Initialize event source listener
+		l, err := net.Listen("tcp", host+":"+port)
+		if err != nil {
+			log.Println("Error listening for events:", err.Error())
+			// TODO Replace os.Exit()
+			os.Exit(1)
+		}
+		defer func() {
+			log.Println("Closing event listener")
+			l.Close()
+		}()
 
-	conns, stopAccept := eh.AcceptConnections(l)
-	defer close(stopAccept)
+		log.Println("Listening for events on " + host + ":" + port)
 
-	for c := range conns {
-		events := eh.handleEvents(c)
-		for e := range events {
-			eh.queueManager.pushEvent(e)
-			// If we have enough events in the queue, process the top event.
-			if eh.queueManager.queueLength() > eventQueueSize {
-				eh.processEvent(eh.queueManager.popEvent())
+		conns, stopAccept := eh.AcceptConnections(l)
+		defer close(stopAccept)
+
+		for {
+			select {
+			case c := <-conns:
+				go func() {
+					events := eh.handleEvents(c)
+					for e := range events {
+						eh.queueManager.pushEvent(e)
+						// If we have enough events in the queue, process the top event.
+						if eh.queueManager.queueLength() > eventQueueSize {
+							eh.processEvent(eh.queueManager.popEvent())
+						}
+					}
+				}()
+			case <-quit:
+				log.Println("Stopping events handler")
+				return
 			}
 		}
-	}
+	}()
+
+	return quit
 }
