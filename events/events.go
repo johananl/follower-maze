@@ -263,10 +263,11 @@ func (eh *EventHandler) Run() {
 		log.Println("Closing event listener")
 		l.Close()
 	}()
+
 	log.Println("Listening for events on " + host + ":" + port)
 
-	conns, quit := eh.AcceptConnections(l)
-	defer close(quit)
+	conns, stopAccept := eh.AcceptConnections(l)
+	defer close(stopAccept)
 
 	for c := range conns {
 		eh.handleEvents(c)

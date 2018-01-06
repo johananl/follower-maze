@@ -166,10 +166,11 @@ func (uh *UserHandler) Run() {
 		log.Println("Closing user listener")
 		l.Close()
 	}()
+
 	log.Println("Listening for user clients on " + host + ":" + port)
 
-	connections, quit := uh.AcceptConnections(l)
-	defer close(quit)
+	connections, stopAccept := uh.AcceptConnections(l)
+	defer close(stopAccept)
 
 	for c := range connections {
 		uch := uh.handleUser(c)
