@@ -113,8 +113,8 @@ func TestAcceptConnections(t *testing.T) {
 	}
 	defer l.Close()
 
-	ch, quit := eh.AcceptConnections(l)
-	defer close(quit)
+	ch, stop := eh.AcceptConnections(l)
+	defer close(stop)
 
 	cConn, err := net.Dial("tcp", "localhost:9090")
 	if err != nil {
