@@ -28,6 +28,7 @@ func main() {
 	go func() {
 		<-shutdown
 		log.Println("SIGINT received - shutting down")
+		// TODO Cleanup
 		os.Exit(0)
 	}()
 

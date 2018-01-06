@@ -6,6 +6,8 @@ import (
 	"sync"
 )
 
+// TODO Move queue to its own package
+
 // eventQueueSize has to be equal to or larger than the max batch size used by the event source.
 // With a max batch size of 100, a queue size of 100 should suffice to avoid ordering problems.
 // However, a larger queue size was used here as a safety measure since the performance impact
