@@ -24,7 +24,7 @@ func main() {
 
 	// Handle events and users concurrently
 	go eh.Run()
-	go uh.Run()
+	stopUserHandler := uh.Run()
 
 	// Listen for SIGINT and shutdown gracefully
 	// TODO Verify this works on every OS
@@ -33,6 +33,9 @@ func main() {
 
 	<-shutdown
 	log.Println("SIGINT received - shutting down")
+
 	// TODO Cleanup
+	stopUserHandler <- true
+
 	log.Println("Graceful shutdown complete")
 }

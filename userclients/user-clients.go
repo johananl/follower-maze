@@ -153,28 +153,39 @@ func NewUserHandler() *UserHandler {
 }
 
 // Run starts the user handler.
-func (uh *UserHandler) Run() {
-	// TODO Graceful shutdown
-	// Initialize user clients listener
-	l, err := net.Listen("tcp", host+":"+port)
-	if err != nil {
-		log.Println("Error listening for users:", err.Error())
-		// TODO Replace os.Exit()
-		os.Exit(1)
-	}
-	defer func() {
-		log.Println("Closing user listener")
-		l.Close()
+func (uh *UserHandler) Run() chan bool {
+	quit := make(chan bool)
+
+	go func() {
+		// Initialize user clients listener
+		l, err := net.Listen("tcp", host+":"+port)
+		if err != nil {
+			log.Println("Error listening for users:", err.Error())
+			// TODO Replace os.Exit()
+			os.Exit(1)
+		}
+		defer func() {
+			log.Println("Closing user listener")
+			l.Close()
+		}()
+
+		log.Println("Listening for user clients on " + host + ":" + port)
+
+		connections, stopAccept := uh.AcceptConnections(l)
+		defer close(stopAccept)
+
+		for {
+			select {
+			case c := <-connections:
+				uch := uh.handleUser(c)
+				u := <-uch
+				uh.registerUser(u)
+			case <-quit:
+				log.Println("Stopping user handler")
+				return
+			}
+		}
 	}()
 
-	log.Println("Listening for user clients on " + host + ":" + port)
-
-	connections, stopAccept := uh.AcceptConnections(l)
-	defer close(stopAccept)
-
-	for c := range connections {
-		uch := uh.handleUser(c)
-		u := <-uch
-		uh.registerUser(u)
-	}
+	return quit
 }
