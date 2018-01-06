@@ -78,53 +78,63 @@ func (eh *EventHandler) AcceptConnections(l net.Listener) (<-chan net.Conn, chan
 	return ch, quit
 }
 
-// Reads a stream of events from a TCP connection and stores them in a priority queue.
-func (eh *EventHandler) handleEvents(conn net.Conn) {
-	// A counter for the total number of valid events received from the connection.
-	// TODO What happens when this overflows?
-	totalReceived := 0
+// Reads a stream of events from a TCP connection and sends back Events.
+func (eh *EventHandler) handleEvents(conn net.Conn) <-chan Event {
+	ch := make(chan Event)
 
-	// Close connection when done reading.
-	defer func() {
-		log.Println("Closing event connection")
-		log.Println("Total events received:", totalReceived)
+	go func() {
+		// A counter for the total number of valid events received from the connection.
+		// TODO What happens when this overflows?
+		// totalReceived := 0
 
-		// Send any events left in the queue after the event connection is closed.
-		log.Println("Flushing queue")
-		eh.flushQueue(eh.queueManager)
-		conn.Close()
+		// Close connection when done reading.
+		defer func() {
+			// log.Println("Total events received:", totalReceived)
+
+			// Send any events left in the queue after the event connection is closed.
+			log.Println("Flushing queue")
+			eh.flushQueue(eh.queueManager)
+
+			log.Println("Closing event connection")
+			conn.Close()
+		}()
+
+		br := bufio.NewReader(conn)
+		// Continually read from connection. This loop iterates every time a newline-delimited string
+		// is read from the TCP connection. The loop blocks at ReadString().
+		for {
+			// TODO Could get valid data AND an error
+			message, err := br.ReadString('\n')
+			if err != nil {
+				// TODO Fix "Error reading user request: io: read/write on closed pipe" in test
+				if err == io.EOF {
+					log.Println("Got EOF on event connection")
+					return // No more events - stop reading.
+				}
+				log.Println("Error reading event:", err.Error())
+				continue // Skip this event and move to the next one.
+			}
+
+			event, err := eh.ParseEvent(message)
+			if err != nil {
+				log.Println("Event parsing failed:", err)
+				continue // Skip this event and move to the next one.
+			}
+
+			// Event looks good. Count it and put it in the queue.
+			// totalReceived++
+			// eh.queueManager.pushEvent(event)
+
+			// If we have enough events in the queue, process the top event.
+			// if eh.queueManager.queueLength() > eventQueueSize {
+			// 	eh.processEvent(eh.queueManager.popEvent())
+			// }
+
+			ch <- event
+		}
 	}()
 
-	br := bufio.NewReader(conn)
-	// Continually read from connection. This loop iterates every time a newline-delimited string
-	// is read from the TCP connection. The loop blocks at ReadString().
-	for {
-		// TODO Could get valid data AND an error
-		message, err := br.ReadString('\n')
-		if err != nil {
-			if err == io.EOF {
-				log.Println("Got EOF on event connection")
-				break // No more events - stop reading.
-			}
-			log.Println("Error reading event:", err.Error())
-			continue // Skip this event and move to the next one.
-		}
-
-		event, err := eh.ParseEvent(message)
-		if err != nil {
-			log.Println("Event parsing failed:", err)
-			continue // Skip this event and move to the next one.
-		}
-
-		// Event looks good. Count it and put it in the queue.
-		totalReceived++
-		eh.queueManager.pushEvent(event)
-
-		// If we have enough events in the queue, process the top event.
-		if eh.queueManager.queueLength() > eventQueueSize {
-			eh.processEvent(eh.queueManager.popEvent())
-		}
-	}
+	return ch
 }
 
 // These patterns are used by ParseEvent to match incoming events. They are initialized outside
@@ -270,6 +280,13 @@ func (eh *EventHandler) Run() {
 	defer close(stopAccept)
 
 	for c := range conns {
-		eh.handleEvents(c)
+		events := eh.handleEvents(c)
+		for e := range events {
+			eh.queueManager.pushEvent(e)
+			// If we have enough events in the queue, process the top event.
+			if eh.queueManager.queueLength() > eventQueueSize {
+				eh.processEvent(eh.queueManager.popEvent())
+			}
+		}
 	}
 }

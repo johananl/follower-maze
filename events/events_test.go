@@ -132,3 +132,23 @@ func TestAcceptConnections(t *testing.T) {
 		)
 	}
 }
+
+// TestHandleEvents ensures that handleEvents successfully returns Event structs.
+func TestHandleEvents(t *testing.T) {
+	client, server := net.Pipe()
+	defer func() {
+		client.Close()
+		server.Close()
+	}()
+
+	events := eh.handleEvents(server)
+
+	for _, te := range goodEvents {
+		client.Write([]byte(te.in))
+		e := <-events
+
+		if !reflect.DeepEqual(e, te.out) {
+			t.Fatalf("Wrong event received: got %v, want %v", e, te.out)
+		}
+	}
+}
