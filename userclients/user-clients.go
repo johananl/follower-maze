@@ -65,7 +65,7 @@ func (uh *UserHandler) AcceptConnections(l net.Listener) (<-chan net.Conn, chan 
 	return ch, quit
 }
 
-// Reads a user ID from the TCP connection and registers the user.
+// Reads a user ID from the TCP connection and returns a User.
 func (uh *UserHandler) handleUser(conn net.Conn) <-chan User {
 	ch := make(chan User)
 	go func() {
