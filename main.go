@@ -9,6 +9,8 @@ import (
 	"bitbucket.org/johananl/follower-maze/userclients"
 )
 
+// TODO Fix public / private symbols
+
 func main() {
 	// Set logging
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds)
@@ -34,7 +36,7 @@ func main() {
 	<-shutdown
 	log.Println("SIGINT received - shutting down")
 
-	// TODO Cleanup
+	// TODO Cleanup & wait for shutdown
 	stopUserHandler <- true
 
 	log.Println("Graceful shutdown complete")
