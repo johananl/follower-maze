@@ -245,6 +245,7 @@ func NewEventHandler(qm *QueueManager, uh *userclients.UserHandler) *EventHandle
 
 // Run starts the event handler.
 func (eh *EventHandler) Run() {
+	// TODO Graceful shutdown
 	// Start queue
 	stopQueue := eh.queueManager.Run()
 	defer func() {

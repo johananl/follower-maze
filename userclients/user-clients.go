@@ -154,6 +154,7 @@ func NewUserHandler() *UserHandler {
 
 // Run starts the user handler.
 func (uh *UserHandler) Run() {
+	// TODO Graceful shutdown
 	// Initialize user clients listener
 	l, err := net.Listen("tcp", host+":"+port)
 	if err != nil {
