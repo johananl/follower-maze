@@ -23,21 +23,21 @@ type QueueManager struct {
 }
 
 var (
-	pushChan = make(chan *Event)
-	popChan  = make(chan chan *Event)
+	pushChan = make(chan Event)
+	popChan  = make(chan chan Event)
 	lenChan  = make(chan chan int)
 	stopChan = make(chan bool)
 )
 
 // Stores an event in the queue.
-func (qm *QueueManager) pushEvent(e *Event) {
+func (qm *QueueManager) pushEvent(e Event) {
 	// TODO why pass Event by reference?
 	pushChan <- e
 }
 
 // Returns the top (first) event in the queue and deletes it from the queue.
-func (qm *QueueManager) popEvent() *Event {
-	result := make(chan *Event)
+func (qm *QueueManager) popEvent() Event {
+	result := make(chan Event)
 	popChan <- result
 
 	return <-result
@@ -63,7 +63,7 @@ func (qm *QueueManager) Run() chan bool {
 			case push := <-pushChan:
 				heap.Push(qm.queue, push)
 			case pop := <-popChan:
-				pop <- heap.Pop(qm.queue).(*Event)
+				pop <- heap.Pop(qm.queue).(Event)
 			case len := <-lenChan:
 				len <- qm.queue.Len()
 			case <-stopChan:
@@ -90,7 +90,7 @@ func NewQueueManager() *QueueManager {
 }
 
 // PriorityQueue implements heap.Interface and holds Events.
-type PriorityQueue []*Event
+type PriorityQueue []Event
 
 // Len returns the size of the queue.
 func (pq PriorityQueue) Len() int { return len(pq) }
@@ -110,7 +110,7 @@ func (pq PriorityQueue) Swap(i, j int) {
 // Push inserts a new element to the queue.
 func (pq *PriorityQueue) Push(x interface{}) {
 	n := len(*pq)
-	item := x.(*Event)
+	item := x.(Event)
 	item.index = n
 	*pq = append(*pq, item)
 }
@@ -120,7 +120,8 @@ func (pq *PriorityQueue) Pop() interface{} {
 	old := *pq
 	n := len(old)
 	item := old[n-1]
-	item.index = -1
+	// TODO Verify we don't need to set index to -1
+	// item.index = -1
 	*pq = old[0 : n-1]
 	return item
 }

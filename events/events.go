@@ -137,16 +137,16 @@ var pPattern = regexp.MustCompile(`^(\d+)\|P\|(\d+)\|(\d+)\n$`)
 var sPattern = regexp.MustCompile(`^(\d+)\|S\|(\d+)\n$`)
 
 // ParseEvent gets a string and returns an Event or an error.
-func (eh *EventHandler) ParseEvent(e string) (*Event, error) {
+func (eh *EventHandler) ParseEvent(e string) (Event, error) {
 
-	var result *Event
+	var result Event
 
 	if m := fPattern.FindStringSubmatch(e); len(m) != 0 {
 		seq, _ := strconv.Atoi(m[1])
 		fuid, _ := strconv.Atoi(m[2])
 		tuid, _ := strconv.Atoi(m[3])
 
-		result = &Event{
+		result = Event{
 			rawEvent:   e,
 			sequence:   seq,
 			eventType:  follow,
@@ -157,7 +157,7 @@ func (eh *EventHandler) ParseEvent(e string) (*Event, error) {
 		seq, _ := strconv.Atoi(m[1])
 		fuid, _ := strconv.Atoi(m[2])
 		tuid, _ := strconv.Atoi(m[3])
-		result = &Event{
+		result = Event{
 			rawEvent:   e,
 			sequence:   seq,
 			eventType:  unfollow,
@@ -166,7 +166,7 @@ func (eh *EventHandler) ParseEvent(e string) (*Event, error) {
 		}
 	} else if m := bPattern.FindStringSubmatch(e); len(m) != 0 {
 		seq, _ := strconv.Atoi(m[1])
-		result = &Event{
+		result = Event{
 			rawEvent:  e,
 			sequence:  seq,
 			eventType: broadcast,
@@ -175,7 +175,7 @@ func (eh *EventHandler) ParseEvent(e string) (*Event, error) {
 		seq, _ := strconv.Atoi(m[1])
 		fuid, _ := strconv.Atoi(m[2])
 		tuid, _ := strconv.Atoi(m[3])
-		result = &Event{
+		result = Event{
 			rawEvent:   e,
 			sequence:   seq,
 			eventType:  privateMsg,
@@ -185,14 +185,14 @@ func (eh *EventHandler) ParseEvent(e string) (*Event, error) {
 	} else if m := sPattern.FindStringSubmatch(e); len(m) != 0 {
 		seq, _ := strconv.Atoi(m[1])
 		fuid, _ := strconv.Atoi(m[2])
-		result = &Event{
+		result = Event{
 			rawEvent:   e,
 			sequence:   seq,
 			eventType:  statusUpdate,
 			fromUserID: fuid,
 		}
 	} else {
-		return nil, errors.New("Invalid event: " + e)
+		return Event{}, errors.New("Invalid event: " + e)
 	}
 
 	return result, nil
@@ -200,7 +200,7 @@ func (eh *EventHandler) ParseEvent(e string) (*Event, error) {
 
 // Processes the received event. Depending on the event's type, processing may include registering
 // a Follow or Unfollow event and sending the event to one or more user clients.
-func (eh *EventHandler) processEvent(e *Event) {
+func (eh *EventHandler) processEvent(e Event) {
 	switch e.eventType {
 	case follow:
 		// Register fromUserID as a follower of toUserID and notify toUserID.
