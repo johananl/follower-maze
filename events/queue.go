@@ -58,10 +58,6 @@ func (qm *QueueManager) queueLength() int {
 func (qm *QueueManager) Run() chan bool {
 	log.Println("Starting queue")
 	go func() {
-		defer func() {
-			log.Println("Stopping queue")
-		}()
-
 		for {
 			select {
 			case push := <-pushChan:
@@ -71,6 +67,7 @@ func (qm *QueueManager) Run() chan bool {
 			case len := <-lenChan:
 				len <- qm.queue.Len()
 			case <-stopChan:
+				log.Println("Stopping queue")
 				return
 			}
 		}
