@@ -99,6 +99,7 @@ func (uh *UserHandler) handleUser(conn net.Conn) <-chan User {
 			ch <- User{userID, conn}
 		}
 	}()
+
 	return ch
 }
 
