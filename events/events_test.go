@@ -60,9 +60,9 @@ func TestParseEvent(t *testing.T) {
 
 func TestParseEventErrors(t *testing.T) {
 	for _, te := range badEvents {
-		e, err := eh.ParseEvent(te)
-		if e != nil || err == nil {
-			t.Fatalf("Got an event instead of an error: %v should not parse", te)
+		_, err := eh.ParseEvent(te)
+		if err == nil {
+			t.Fatalf("Expected to get an error: %v should not parse", te)
 		}
 	}
 }
