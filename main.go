@@ -22,17 +22,17 @@ func main() {
 	// Initialize event handler
 	eh := events.NewEventHandler(qm, uh)
 
+	// Handle events and users concurrently
+	go eh.Run()
+	go uh.Run()
+
 	// Listen for SIGINT and shutdown gracefully
+	// TODO Verify this works on every OS
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt)
-	go func() {
-		<-shutdown
-		log.Println("SIGINT received - shutting down")
-		// TODO Cleanup
-		os.Exit(0)
-	}()
 
-	// Handle events and users concurrently (acceptUsers runs in the main goroutine)
-	go eh.Run()
-	uh.Run()
+	<-shutdown
+	log.Println("SIGINT received - shutting down")
+	// TODO Cleanup
+	log.Println("Graceful shutdown complete")
 }
