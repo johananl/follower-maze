@@ -81,7 +81,7 @@ func TestPushEvent(t *testing.T) {
 	qm.pushEvent(testEvent)
 
 	if qm.queueLength() != 1 {
-		t.Fatalf("Invalid queue length after queueing event: got %d, want %d", qm.queue.Len(), 1)
+		t.Fatalf("Invalid queue length after queueing event: got %d, want %d", qm.queueLength(), 1)
 	}
 
 	qm.popEvent()
