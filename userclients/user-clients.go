@@ -36,7 +36,7 @@ type UserHandler struct {
 }
 
 // AcceptConnections accepts TCP connections from user clients and sends back net.Conn structs.
-func (uh *UserHandler) AcceptConnections(l net.Listener) (<-chan net.Conn, chan bool) {
+func (uh *UserHandler) AcceptConnections(l net.Listener) (<-chan net.Conn, chan<- bool) {
 	ch := make(chan net.Conn)
 	quit := make(chan bool)
 
@@ -82,7 +82,8 @@ func (uh *UserHandler) handleUser(conn net.Conn) <-chan User {
 			message, err := br.ReadString('\n')
 			if err != nil {
 				if err == io.EOF {
-					break
+					log.Println("Got EOF on user connection")
+					return
 				}
 				log.Println("Error reading user request:", err.Error())
 				continue
@@ -153,7 +154,7 @@ func NewUserHandler() *UserHandler {
 }
 
 // Run starts the user handler.
-func (uh *UserHandler) Run() chan bool {
+func (uh *UserHandler) Run() chan<- bool {
 	quit := make(chan bool)
 
 	go func() {
