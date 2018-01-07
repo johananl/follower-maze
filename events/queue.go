@@ -31,7 +31,6 @@ var (
 
 // Stores an event in the queue.
 func (qm *QueueManager) pushEvent(e Event) {
-	// TODO why pass Event by reference?
 	pushChan <- e
 }
 
