@@ -14,10 +14,10 @@ import (
 // (event delivery delay) is trivial.
 const eventQueueSize = 200
 
-// QueueManager manages an event queue. The queue is a priority queue implemented using a min heap
+// queueManager manages an event queue. The queue is a priority queue implemented using a min heap
 // data structure for event ordering. A heap provides a good solution here since it employs
 // efficient sorting upon insertion as well as quick retrieval at a constant time.
-type QueueManager struct {
+type queueManager struct {
 	queue *PriorityQueue
 	lock  sync.RWMutex
 }
@@ -30,12 +30,12 @@ var (
 )
 
 // Stores an event in the queue.
-func (qm *QueueManager) pushEvent(e event) {
+func (qm *queueManager) pushEvent(e event) {
 	pushChan <- e
 }
 
 // Returns the top (first) event in the queue and deletes it from the queue.
-func (qm *QueueManager) popEvent() event {
+func (qm *queueManager) popEvent() event {
 	result := make(chan event)
 	popChan <- result
 
@@ -44,7 +44,7 @@ func (qm *QueueManager) popEvent() event {
 
 // queueLength returns the length of the queue. This function is used mainly for validating queue
 // length during tests.
-func (qm *QueueManager) queueLength() int {
+func (qm *queueManager) queueLength() int {
 	result := make(chan int)
 	lenChan <- result
 
@@ -54,7 +54,7 @@ func (qm *QueueManager) queueLength() int {
 // Run starts watching for incoming queue operations (push / pop) and performs them in
 // a thread-safe way. Selecting between push and pop operations serializes access to the
 // queue, thus guaranteeing safety.
-func (qm *QueueManager) Run() chan bool {
+func (qm *queueManager) Run() chan bool {
 	log.Println("Starting queue")
 	go func() {
 		for {
@@ -75,11 +75,11 @@ func (qm *QueueManager) Run() chan bool {
 	return stopChan
 }
 
-// NewQueueManager constructs a new QueueManager and returns a pointer to it. It initializes the
+// NewQueueManager constructs a new queueManager and returns a pointer to it. It initializes the
 // queue's data structure (a min heap) and performs a heapify operation on it before returning.
-func NewQueueManager() *QueueManager {
+func NewQueueManager() *queueManager {
 	pq := make(PriorityQueue, 0)
-	qm := QueueManager{
+	qm := queueManager{
 		queue: &pq,
 		lock:  sync.RWMutex{},
 	}

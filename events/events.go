@@ -44,7 +44,7 @@ type event struct {
 // eventHandler handles events. It saves them in a priority queue for ordering and communicates
 // with a UserHandler for user-related operations.
 type eventHandler struct {
-	queueManager *QueueManager
+	queueManager *queueManager
 	userHandler  *userclients.UserHandler
 }
 
@@ -241,15 +241,15 @@ func (eh *eventHandler) processEvent(e event) {
 
 // Empties the queue by processing all remaining messages. This method is called once the event
 // source connection has been closed.
-func (eh *eventHandler) flushQueue(qm *QueueManager) {
+func (eh *eventHandler) flushQueue(qm *queueManager) {
 	for qm.queueLength() > 0 {
 		eh.processEvent(qm.popEvent())
 	}
 }
 
 // NewEventHandler constructs a new EventHandler and returns a pointer to it. It receives a pointer
-// to a QueueManager as well as a pointer to a UserHandler.
-func NewEventHandler(qm *QueueManager, uh *userclients.UserHandler) *eventHandler {
+// to a queueManager as well as a pointer to a UserHandler.
+func NewEventHandler(qm *queueManager, uh *userclients.UserHandler) *eventHandler {
 	return &eventHandler{qm, uh}
 }
 
