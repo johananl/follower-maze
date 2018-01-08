@@ -48,7 +48,7 @@ var badEvents = []string{
 
 func TestParseEvent(t *testing.T) {
 	for _, te := range goodEvents {
-		e, err := eh.ParseEvent(te.in)
+		e, err := eh.parseEvent(te.in)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -60,7 +60,7 @@ func TestParseEvent(t *testing.T) {
 
 func TestParseEventErrors(t *testing.T) {
 	for _, te := range badEvents {
-		_, err := eh.ParseEvent(te)
+		_, err := eh.parseEvent(te)
 		if err == nil {
 			t.Fatalf("Expected to get an error: %v should not parse", te)
 		}

@@ -115,7 +115,7 @@ func (eh *eventHandler) handleEvents(conn net.Conn) <-chan event {
 				continue // Skip this event and move to the next one.
 			}
 
-			event, err := eh.ParseEvent(message)
+			event, err := eh.parseEvent(message)
 			if err != nil {
 				log.Println("Event parsing failed:", err)
 				continue // Skip this event and move to the next one.
@@ -137,8 +137,8 @@ func (eh *eventHandler) handleEvents(conn net.Conn) <-chan event {
 	return ch
 }
 
-// These patterns are used by ParseEvent to match incoming events. They are initialized outside
-// the function because compiling regex patterns is very expensive and ParseEvent is called
+// These patterns are used by parseEvent to match incoming events. They are initialized outside
+// the function because compiling regex patterns is very expensive and parseEvent is called
 // intensively.
 var fPattern = regexp.MustCompile(`^(\d+)\|F\|(\d+)\|(\d+)\n$`)
 var uPattern = regexp.MustCompile(`^(\d+)\|U\|(\d+)\|(\d+)\n$`)
@@ -146,8 +146,8 @@ var bPattern = regexp.MustCompile(`^(\d+)\|B\n$`)
 var pPattern = regexp.MustCompile(`^(\d+)\|P\|(\d+)\|(\d+)\n$`)
 var sPattern = regexp.MustCompile(`^(\d+)\|S\|(\d+)\n$`)
 
-// ParseEvent gets a string and returns an Event or an error.
-func (eh *eventHandler) ParseEvent(e string) (event, error) {
+// parseEvent gets a string and returns an Event or an error.
+func (eh *eventHandler) parseEvent(e string) (event, error) {
 
 	var result event
 
