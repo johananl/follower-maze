@@ -14,22 +14,22 @@ var eh = NewEventHandler(qm, uh)
 
 var goodEvents = []struct {
 	in  string
-	out Event
+	out event
 }{
 	{"666|F|60|50\n",
-		Event{rawEvent: "666|F|60|50\n", sequence: 666, eventType: follow, fromUserID: 60, toUserID: 50},
+		event{rawEvent: "666|F|60|50\n", sequence: 666, eventType: follow, fromUserID: 60, toUserID: 50},
 	},
 	{"1|U|12|9\n",
-		Event{rawEvent: "1|U|12|9\n", sequence: 1, eventType: unfollow, fromUserID: 12, toUserID: 9},
+		event{rawEvent: "1|U|12|9\n", sequence: 1, eventType: unfollow, fromUserID: 12, toUserID: 9},
 	},
 	{"542532|B\n",
-		Event{rawEvent: "542532|B\n", sequence: 542532, eventType: broadcast},
+		event{rawEvent: "542532|B\n", sequence: 542532, eventType: broadcast},
 	},
 	{"43|P|32|56\n",
-		Event{rawEvent: "43|P|32|56\n", sequence: 43, eventType: privateMsg, fromUserID: 32, toUserID: 56},
+		event{rawEvent: "43|P|32|56\n", sequence: 43, eventType: privateMsg, fromUserID: 32, toUserID: 56},
 	},
 	{"634|S|32\n",
-		Event{rawEvent: "634|S|32\n", sequence: 634, eventType: statusUpdate, fromUserID: 32},
+		event{rawEvent: "634|S|32\n", sequence: 634, eventType: statusUpdate, fromUserID: 32},
 	},
 }
 
@@ -67,7 +67,7 @@ func TestParseEventErrors(t *testing.T) {
 	}
 }
 
-var testEvent = Event{
+var testEvent = event{
 	rawEvent:   "666|F|60|50\n",
 	sequence:   666,
 	eventType:  follow,

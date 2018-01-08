@@ -28,11 +28,11 @@ const (
 	statusUpdate string = "S"
 )
 
-// Event represents an event received from the event source. Events are handled by an EventHandler.
+// event represents an event received from the event source. Events are handled by an eventHandler.
 // The rawEvent field is used to store the original event (after parsing) as received from the TCP
 // connection. This is done to avoid having to reconstruct the raw event before sending it to user
 // clients, which is relatively expensive.
-type Event struct {
+type event struct {
 	rawEvent   string
 	sequence   int
 	eventType  string
@@ -41,15 +41,15 @@ type Event struct {
 	index      int // Used for ordering in a priority queue
 }
 
-// EventHandler handles events. It saves them in a priority queue for ordering and communicates
+// eventHandler handles events. It saves them in a priority queue for ordering and communicates
 // with a UserHandler for user-related operations.
-type EventHandler struct {
+type eventHandler struct {
 	queueManager *QueueManager
 	userHandler  *userclients.UserHandler
 }
 
 // AcceptConnections accepts TCP connections from event sources and sends back net.Conn structs.
-func (eh *EventHandler) AcceptConnections(l net.Listener) (<-chan net.Conn, chan bool) {
+func (eh *eventHandler) AcceptConnections(l net.Listener) (<-chan net.Conn, chan bool) {
 	ch := make(chan net.Conn)
 	quit := make(chan bool)
 
@@ -79,8 +79,8 @@ func (eh *EventHandler) AcceptConnections(l net.Listener) (<-chan net.Conn, chan
 }
 
 // Reads a stream of events from a TCP connection and sends back Events.
-func (eh *EventHandler) handleEvents(conn net.Conn) <-chan Event {
-	ch := make(chan Event)
+func (eh *eventHandler) handleEvents(conn net.Conn) <-chan event {
+	ch := make(chan event)
 
 	go func() {
 		// A counter for the total number of valid events received from the connection.
@@ -147,16 +147,16 @@ var pPattern = regexp.MustCompile(`^(\d+)\|P\|(\d+)\|(\d+)\n$`)
 var sPattern = regexp.MustCompile(`^(\d+)\|S\|(\d+)\n$`)
 
 // ParseEvent gets a string and returns an Event or an error.
-func (eh *EventHandler) ParseEvent(e string) (Event, error) {
+func (eh *eventHandler) ParseEvent(e string) (event, error) {
 
-	var result Event
+	var result event
 
 	if m := fPattern.FindStringSubmatch(e); len(m) != 0 {
 		seq, _ := strconv.Atoi(m[1])
 		fuid, _ := strconv.Atoi(m[2])
 		tuid, _ := strconv.Atoi(m[3])
 
-		result = Event{
+		result = event{
 			rawEvent:   e,
 			sequence:   seq,
 			eventType:  follow,
@@ -167,7 +167,7 @@ func (eh *EventHandler) ParseEvent(e string) (Event, error) {
 		seq, _ := strconv.Atoi(m[1])
 		fuid, _ := strconv.Atoi(m[2])
 		tuid, _ := strconv.Atoi(m[3])
-		result = Event{
+		result = event{
 			rawEvent:   e,
 			sequence:   seq,
 			eventType:  unfollow,
@@ -176,7 +176,7 @@ func (eh *EventHandler) ParseEvent(e string) (Event, error) {
 		}
 	} else if m := bPattern.FindStringSubmatch(e); len(m) != 0 {
 		seq, _ := strconv.Atoi(m[1])
-		result = Event{
+		result = event{
 			rawEvent:  e,
 			sequence:  seq,
 			eventType: broadcast,
@@ -185,7 +185,7 @@ func (eh *EventHandler) ParseEvent(e string) (Event, error) {
 		seq, _ := strconv.Atoi(m[1])
 		fuid, _ := strconv.Atoi(m[2])
 		tuid, _ := strconv.Atoi(m[3])
-		result = Event{
+		result = event{
 			rawEvent:   e,
 			sequence:   seq,
 			eventType:  privateMsg,
@@ -195,14 +195,14 @@ func (eh *EventHandler) ParseEvent(e string) (Event, error) {
 	} else if m := sPattern.FindStringSubmatch(e); len(m) != 0 {
 		seq, _ := strconv.Atoi(m[1])
 		fuid, _ := strconv.Atoi(m[2])
-		result = Event{
+		result = event{
 			rawEvent:   e,
 			sequence:   seq,
 			eventType:  statusUpdate,
 			fromUserID: fuid,
 		}
 	} else {
-		return Event{}, errors.New("Invalid event: " + e)
+		return event{}, errors.New("Invalid event: " + e)
 	}
 
 	return result, nil
@@ -210,7 +210,7 @@ func (eh *EventHandler) ParseEvent(e string) (Event, error) {
 
 // Processes the received event. Depending on the event's type, processing may include registering
 // a Follow or Unfollow event and sending the event to one or more user clients.
-func (eh *EventHandler) processEvent(e Event) {
+func (eh *eventHandler) processEvent(e event) {
 	switch e.eventType {
 	case follow:
 		// Register fromUserID as a follower of toUserID and notify toUserID.
@@ -241,7 +241,7 @@ func (eh *EventHandler) processEvent(e Event) {
 
 // Empties the queue by processing all remaining messages. This method is called once the event
 // source connection has been closed.
-func (eh *EventHandler) flushQueue(qm *QueueManager) {
+func (eh *eventHandler) flushQueue(qm *QueueManager) {
 	for qm.queueLength() > 0 {
 		eh.processEvent(qm.popEvent())
 	}
@@ -249,12 +249,12 @@ func (eh *EventHandler) flushQueue(qm *QueueManager) {
 
 // NewEventHandler constructs a new EventHandler and returns a pointer to it. It receives a pointer
 // to a QueueManager as well as a pointer to a UserHandler.
-func NewEventHandler(qm *QueueManager, uh *userclients.UserHandler) *EventHandler {
-	return &EventHandler{qm, uh}
+func NewEventHandler(qm *QueueManager, uh *userclients.UserHandler) *eventHandler {
+	return &eventHandler{qm, uh}
 }
 
 // Run starts the event handler.
-func (eh *EventHandler) Run() chan<- bool {
+func (eh *eventHandler) Run() chan<- bool {
 	// TODO Graceful shutdown
 	quit := make(chan bool)
 
