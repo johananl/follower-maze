@@ -78,7 +78,7 @@ func (eh *eventHandler) acceptConnections(l net.Listener) (<-chan net.Conn, chan
 	return ch, quit
 }
 
-// Reads a stream of events from a TCP connection and sends back Events.
+// Reads a stream of events from a TCP connection and sends back events.
 func (eh *eventHandler) handleEvents(conn net.Conn) <-chan event {
 	ch := make(chan event)
 

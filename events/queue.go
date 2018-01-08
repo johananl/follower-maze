@@ -88,7 +88,7 @@ func NewQueueManager() *QueueManager {
 	return &qm
 }
 
-// PriorityQueue implements heap.Interface and holds Events.
+// PriorityQueue implements heap.Interface and holds events.
 type PriorityQueue []event
 
 // Len returns the size of the queue.

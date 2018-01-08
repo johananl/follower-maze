@@ -133,7 +133,7 @@ func TestAcceptConnections(t *testing.T) {
 	}
 }
 
-// TestHandleEvents ensures that handleEvents successfully returns Event structs.
+// TestHandleEvents ensures that handleEvents successfully returns event structs.
 func TestHandleEvents(t *testing.T) {
 	client, server := net.Pipe()
 	defer func() {
