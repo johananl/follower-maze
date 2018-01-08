@@ -36,7 +36,8 @@ func main() {
 	<-shutdown
 	log.Println("SIGINT received - shutting down")
 
-	// TODO Cleanup & wait for shutdown
+	// TODO Cleanup & wait for shutdown (at the moment there is a timing problem caused by
+	// deferred functions)
 	stopEventHandler <- true
 	stopUserHandler <- true
 
