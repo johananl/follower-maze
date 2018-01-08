@@ -20,7 +20,7 @@ func TestRegisterUser(t *testing.T) {
 	}
 }
 
-// TestAcceptConnections ensures that AcceptConnections successfully returns net.Conn structs for TCP
+// TestAcceptConnections ensures that acceptConnections successfully returns net.Conn structs for TCP
 // connections received from a listener.
 func TestAcceptConnections(t *testing.T) {
 	l, err := net.Listen("tcp", "localhost:9099")
@@ -29,7 +29,7 @@ func TestAcceptConnections(t *testing.T) {
 	}
 	defer l.Close()
 
-	conns, stop := uh.AcceptConnections(l)
+	conns, stop := uh.acceptConnections(l)
 	defer close(stop)
 
 	cConn, err := net.Dial("tcp", "localhost:9099")

@@ -49,7 +49,7 @@ type eventHandler struct {
 }
 
 // AcceptConnections accepts TCP connections from event sources and sends back net.Conn structs.
-func (eh *eventHandler) AcceptConnections(l net.Listener) (<-chan net.Conn, chan bool) {
+func (eh *eventHandler) acceptConnections(l net.Listener) (<-chan net.Conn, chan bool) {
 	ch := make(chan net.Conn)
 	quit := make(chan bool)
 
@@ -279,7 +279,7 @@ func (eh *eventHandler) Run() chan<- bool {
 
 		log.Println("Listening for events on " + host + ":" + port)
 
-		conns, stopAccept := eh.AcceptConnections(l)
+		conns, stopAccept := eh.acceptConnections(l)
 		defer close(stopAccept)
 
 		for {

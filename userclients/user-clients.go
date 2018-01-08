@@ -36,7 +36,7 @@ type UserHandler struct {
 }
 
 // AcceptConnections accepts TCP connections from user clients and sends back net.Conn structs.
-func (uh *UserHandler) AcceptConnections(l net.Listener) (<-chan net.Conn, chan<- bool) {
+func (uh *UserHandler) acceptConnections(l net.Listener) (<-chan net.Conn, chan<- bool) {
 	ch := make(chan net.Conn)
 	quit := make(chan bool)
 
@@ -173,7 +173,7 @@ func (uh *UserHandler) Run() chan<- bool {
 
 		log.Println("Listening for user clients on " + host + ":" + port)
 
-		connections, stopAccept := uh.AcceptConnections(l)
+		connections, stopAccept := uh.acceptConnections(l)
 		defer close(stopAccept)
 
 		for {
