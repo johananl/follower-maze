@@ -110,7 +110,7 @@ func TestPopEvent(t *testing.T) {
 // a set of events, shuffling them and storing them in the queue. The events should be popped
 // in the correct order (by sequence).
 func TestQueueOrdering(t *testing.T) {
-	numEvents := 100
+	numEvents := 1000
 
 	// Populate events slice
 	events := []event{}
