@@ -130,12 +130,15 @@ func TestQueueOrdering(t *testing.T) {
 		events[i], events[j] = events[j], events[i]
 	}
 
+	// Start queue
 	stop := qm.Run()
 
+	// Store events in queue
 	for _, e := range events {
 		qm.pushEvent(e)
 	}
 
+	// Retrieve events and verify order
 	for i := 1; i <= numEvents; i++ {
 		e := qm.popEvent()
 		if e.sequence != i {
@@ -143,6 +146,7 @@ func TestQueueOrdering(t *testing.T) {
 		}
 	}
 
+	// Stop queue
 	stop <- true
 }
 
