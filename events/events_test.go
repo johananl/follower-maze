@@ -1,6 +1,7 @@
 package events
 
 import (
+	"fmt"
 	"net"
 	"reflect"
 	"testing"
@@ -99,6 +100,36 @@ func TestPopEvent(t *testing.T) {
 	}
 	if qm.queueLength() != 0 {
 		t.Fatalf("Popped event not deleted from queue")
+	}
+
+	stop <- true
+}
+
+// TestQueueOrdering verifies that the queue properly orders events.
+func TestQueueOrdering(t *testing.T) {
+	stop := qm.Run()
+
+	unordered := []int{2, 1, 5, 3, 4}
+	ordered := []int{1, 2, 3, 4, 5}
+
+	for _, i := range unordered {
+		qm.pushEvent(
+			event{
+				rawEvent:   fmt.Sprintf("%d|F|60|50\n", i),
+				sequence:   i,
+				eventType:  follow,
+				fromUserID: 60,
+				toUserID:   50,
+			},
+		)
+	}
+
+	for _, i := range ordered {
+		e := qm.popEvent()
+
+		if e.sequence != i {
+			t.Fatalf("Wrong sequence received from queue: got %v want %v", e.sequence, i)
+		}
 	}
 
 	stop <- true
