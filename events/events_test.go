@@ -183,3 +183,5 @@ func TestHandleEvents(t *testing.T) {
 		}
 	}
 }
+
+// TODO Test event processing
