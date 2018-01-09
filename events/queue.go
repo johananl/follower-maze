@@ -3,7 +3,6 @@ package events
 import (
 	"container/heap"
 	"log"
-	"sync"
 )
 
 // TODO Move queue to its own package
@@ -19,7 +18,6 @@ const eventQueueSize = 200
 // efficient sorting upon insertion as well as quick retrieval at a constant time.
 type QueueManager struct {
 	queue *PriorityQueue
-	lock  sync.RWMutex
 }
 
 var (
@@ -79,10 +77,7 @@ func (qm *QueueManager) Run() chan bool {
 // queue's data structure (a min heap) and performs a heapify operation on it before returning.
 func NewQueueManager() *QueueManager {
 	pq := make(PriorityQueue, 0)
-	qm := QueueManager{
-		queue: &pq,
-		lock:  sync.RWMutex{},
-	}
+	qm := QueueManager{queue: &pq}
 	heap.Init(qm.queue)
 
 	return &qm
