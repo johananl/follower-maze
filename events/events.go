@@ -83,10 +83,6 @@ func (eh *eventHandler) handleEvents(conn net.Conn) <-chan event {
 	ch := make(chan event)
 
 	go func() {
-		// A counter for the total number of valid events received from the connection.
-		// TODO What happens when this overflows?
-		// totalReceived := 0
-
 		// Close connection when done reading.
 		defer func() {
 			// log.Println("Total events received:", totalReceived)
@@ -121,15 +117,7 @@ func (eh *eventHandler) handleEvents(conn net.Conn) <-chan event {
 				continue // Skip this event and move to the next one.
 			}
 
-			// Event looks good. Count it and put it in the queue.
-			// totalReceived++
-			// eh.queueManager.pushEvent(event)
-
-			// If we have enough events in the queue, process the top event.
-			// if eh.queueManager.queueLength() > eventQueueSize {
-			// 	eh.processEvent(eh.queueManager.popEvent())
-			// }
-
+			// Event looks good - send it over the channel.
 			ch <- event
 		}
 	}()
