@@ -2,6 +2,7 @@ package events
 
 import (
 	"fmt"
+	"math/rand"
 	"net"
 	"reflect"
 	"testing"
@@ -105,28 +106,38 @@ func TestPopEvent(t *testing.T) {
 	stop <- true
 }
 
-// TestQueueOrdering verifies that the queue properly orders events.
+// TestQueueOrdering verifies that the queue properly orders events. It does so by generating
+// a set of events, shuffling them and storing them in the queue. The events should be popped
+// in the correct order (by sequence).
 func TestQueueOrdering(t *testing.T) {
-	stop := qm.Run()
+	numEvents := 100
 
-	unordered := []int{2, 1, 5, 3, 4}
-	ordered := []int{1, 2, 3, 4, 5}
-
-	for _, i := range unordered {
-		qm.pushEvent(
-			event{
-				rawEvent:   fmt.Sprintf("%d|F|60|50\n", i),
-				sequence:   i,
-				eventType:  follow,
-				fromUserID: 60,
-				toUserID:   50,
-			},
-		)
+	// Populate events slice
+	events := []event{}
+	for i := 1; i <= numEvents; i++ {
+		events = append(events, event{
+			rawEvent:   fmt.Sprintf("%d|F|60|50\n", i),
+			sequence:   i,
+			eventType:  follow,
+			fromUserID: 60,
+			toUserID:   50,
+		})
 	}
 
-	for _, i := range ordered {
-		e := qm.popEvent()
+	// Shuffle events slice
+	for i := range events {
+		j := rand.Intn(i + 1)
+		events[i], events[j] = events[j], events[i]
+	}
 
+	stop := qm.Run()
+
+	for _, e := range events {
+		qm.pushEvent(e)
+	}
+
+	for i := 1; i <= numEvents; i++ {
+		e := qm.popEvent()
 		if e.sequence != i {
 			t.Fatalf("Wrong sequence received from queue: got %v want %v", e.sequence, i)
 		}
