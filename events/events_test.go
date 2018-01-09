@@ -6,6 +6,7 @@ import (
 	"net"
 	"reflect"
 	"testing"
+	"time"
 
 	"bitbucket.org/johananl/follower-maze/userclients"
 )
@@ -111,6 +112,8 @@ func TestPopEvent(t *testing.T) {
 // in the correct order (by sequence).
 func TestQueueOrdering(t *testing.T) {
 	numEvents := 1000
+
+	rand.Seed(time.Now().UnixNano())
 
 	// Populate events slice
 	events := []event{}
