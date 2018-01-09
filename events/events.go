@@ -102,13 +102,17 @@ func (eh *eventHandler) handleEvents(conn net.Conn) <-chan event {
 			// TODO Could get valid data AND an error
 			message, err := br.ReadString('\n')
 			if err != nil {
-				// TODO Fix "Error reading user request: io: read/write on closed pipe" in test
-				if err == io.EOF {
+				switch err {
+				case io.EOF:
 					log.Println("Got EOF on event connection")
-					return // No more events - stop reading.
+					return
+				case io.ErrClosedPipe: // Used mainly in tests
+					log.Println("Got ErrClosedPipe on event connection")
+					return
+				default:
+					log.Println("Error reading event:", err.Error())
+					continue // Skip this event and move to the next one.
 				}
-				log.Println("Error reading event:", err.Error())
-				continue // Skip this event and move to the next one.
 			}
 
 			event, err := eh.parseEvent(message)

@@ -81,12 +81,17 @@ func (uh *UserHandler) handleUser(conn net.Conn) <-chan User {
 		for {
 			message, err := br.ReadString('\n')
 			if err != nil {
-				if err == io.EOF {
+				switch err {
+				case io.EOF:
 					log.Println("Got EOF on user connection")
 					return
+				case io.ErrClosedPipe: // Used mainly in tests
+					log.Println("Got ErrClosedPipe on user connection")
+					return
+				default:
+					log.Println("Error reading user request:", err.Error())
+					continue // Skip this message and move to the next one.
 				}
-				log.Println("Error reading user request:", err.Error())
-				continue
 			}
 
 			// Parse user ID
