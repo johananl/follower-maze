@@ -9,6 +9,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"sync"
 
 	"bitbucket.org/johananl/follower-maze/userclients"
 )
@@ -246,11 +247,13 @@ func NewEventHandler(qm *QueueManager, uh *userclients.UserHandler) *EventHandle
 }
 
 // Run starts the event handler.
-func (eh *EventHandler) Run() chan<- bool {
+func (eh *EventHandler) Run(wg *sync.WaitGroup) chan<- bool {
 	// TODO Graceful shutdown
+	wg.Add(1)
 	quit := make(chan bool)
 
 	go func() {
+		defer wg.Done()
 		// Start queue
 		stopQueue := eh.queueManager.Run()
 		defer func() {

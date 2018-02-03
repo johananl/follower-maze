@@ -4,12 +4,15 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"sync"
 
 	"bitbucket.org/johananl/follower-maze/events"
 	"bitbucket.org/johananl/follower-maze/userclients"
 )
 
 // TODO Fix public / private symbols
+
+var wg sync.WaitGroup
 
 func main() {
 	// Set logging
@@ -25,8 +28,8 @@ func main() {
 	eh := events.NewEventHandler(qm, uh)
 
 	// Handle events and users concurrently
-	stopEventHandler := eh.Run()
-	stopUserHandler := uh.Run()
+	stopEventHandler := eh.Run(&wg)
+	stopUserHandler := uh.Run(&wg)
 
 	// Listen for SIGINT and shutdown gracefully
 	shutdown := make(chan os.Signal, 1)
@@ -42,5 +45,6 @@ func main() {
 	stopEventHandler <- true
 	stopUserHandler <- true
 
+	wg.Wait()
 	log.Println("Graceful shutdown complete")
 }

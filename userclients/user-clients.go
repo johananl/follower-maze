@@ -161,10 +161,12 @@ func NewUserHandler() *UserHandler {
 }
 
 // Run starts the user handler.
-func (uh *UserHandler) Run() chan<- bool {
+func (uh *UserHandler) Run(wg *sync.WaitGroup) chan<- bool {
+	wg.Add(1)
 	quit := make(chan bool)
 
 	go func() {
+		defer wg.Done()
 		// Initialize user clients listener
 		l, err := net.Listen("tcp", host+":"+port)
 		if err != nil {
