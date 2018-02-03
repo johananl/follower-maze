@@ -254,10 +254,13 @@ func (eh *EventHandler) Run(wg *sync.WaitGroup) chan<- bool {
 
 	go func() {
 		defer wg.Done()
+
 		// Start queue
-		stopQueue := eh.queueManager.Run()
+		var qwg sync.WaitGroup
+		stopQueue := eh.queueManager.Run(&qwg)
 		defer func() {
 			stopQueue <- true
+			qwg.Wait()
 		}()
 
 		// Initialize event source listener

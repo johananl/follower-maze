@@ -3,6 +3,7 @@ package events
 import (
 	"container/heap"
 	"log"
+	"sync"
 )
 
 // TODO Move queue to its own package
@@ -52,9 +53,11 @@ func (qm *QueueManager) queueLength() int {
 // Run starts watching for incoming queue operations (push / pop) and performs them in
 // a thread-safe way. Selecting between push and pop operations serializes access to the
 // queue, thus guaranteeing safety.
-func (qm *QueueManager) Run() chan bool {
+func (qm *QueueManager) Run(wg *sync.WaitGroup) chan bool {
 	log.Println("Starting queue")
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		for {
 			select {
 			case push := <-pushChan:
