@@ -32,6 +32,8 @@ func main() {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt)
 
+	// Block until SIGINT is received
+	// TODO Handle SIGTERM too
 	<-shutdown
 	log.Println("SIGINT received - shutting down")
 
