@@ -29,7 +29,6 @@ func main() {
 	stopUserHandler := uh.Run()
 
 	// Listen for SIGINT and shutdown gracefully
-	// TODO Verify this works on every OS
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt)
 
