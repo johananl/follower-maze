@@ -29,6 +29,7 @@ type User struct {
 // map has a mutex lock since multiple goroutines access it concurrently for both read and write
 // operations.
 type UserHandler struct {
+	// TODO Remove locks
 	Users     map[int]net.Conn
 	uLock     sync.RWMutex
 	followers map[int][]int
