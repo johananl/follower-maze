@@ -50,16 +50,19 @@ type EventHandler struct {
 }
 
 // AcceptConnections accepts TCP connections from event sources and sends back net.Conn structs.
-func (eh *EventHandler) acceptConnections(l net.Listener) (<-chan net.Conn, chan bool) {
+func (eh *EventHandler) acceptConnections(l net.Listener, wg *sync.WaitGroup) (<-chan net.Conn, chan bool) {
+	wg.Add(1)
 	ch := make(chan net.Conn)
 	quit := make(chan bool)
 
 	go func() {
+		defer wg.Done()
 		defer close(ch)
 		// Continually accept event connections. This loop iterates every time a new connection from an
 		// event source is received and blocks at Accept().
 		for {
 			conn, err := l.Accept()
+			// How do we return when we're blocked on Accept()? case <-quit is never evaluated.
 			if err != nil {
 				log.Println("Error accepting event connection:", err.Error())
 
@@ -277,8 +280,15 @@ func (eh *EventHandler) Run(wg *sync.WaitGroup) chan<- bool {
 
 		log.Println("Listening for events on " + host + ":" + port)
 
-		conns, stopAccept := eh.acceptConnections(l)
-		defer close(stopAccept)
+		var awg sync.WaitGroup
+
+		conns, stopAccept := eh.acceptConnections(l, &awg)
+		defer func() {
+			log.Println("Running deferred func")
+			close(stopAccept)
+			log.Println("Closed channel - now we wait...")
+			awg.Wait()
+		}()
 
 		for {
 			select {
