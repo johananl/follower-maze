@@ -1,0 +1,147 @@
+Follower Maze
+An Exercise in Concurrency
+
+Johanan Liebermann
+February 2018
+@j_lieb
+
+* $ whoami
+
+- I'm an autodidact.
+
+- I love containers.
+
+- I'm a musician.
+
+- I speak 4 languages (and counting).
+
+* Overview
+
+* Overview
+
+This is an exercise in concurrent computing.
+
+A solution to a fictional problem which simulates a real-world problem.
+
+Implemented in Go.
+
+Utilizes Go's built-in concurrency primitives (channels and goroutines).
+
+* High-Level Requirements
+
+* High-Level Requirements
+
+A *socket*server* which serves as a message bus.
+
+Should route events (messages) from *one* event source to *many* user clients.
+
+Events are received over TCP and should be passed along over TCP.
+
+Events are transmitted using a simple, *text-based*protocol*.
+
+User clients identify themselves by sending a *user*ID* right after connecting.
+
+* High-Level Requirements
+
+.image img/architecture.png _ 800
+
+* The Protocol
+
+* The Protocol
+
+- A text-based protocol (UTF-8, messages delimited by newlines).
+- Fields are delimited by pipes.
+
+Sample messages:
+
+    | Payload       | Sequence #| Type         | From User Id | To User Id |
+    |---------------|-----------|--------------|--------------|------------|
+    |666|F|60|50    | 666       | Follow       | 60           | 50         |
+    |1|U|12|9       | 1         | Unfollow     | 12           | 9          |
+    |542532|B       | 542532    | Broadcast    | -            | -          |
+    |43|P|32|56     | 43        | Private Msg  | 32           | 56         |
+    |634|S|32       | 634       | Status Update| 32           | -          |
+
+* The Protocol
+
+    | Payload       | Sequence #| Type         | From User Id | To User Id |
+    |---------------|-----------|--------------|--------------|------------|
+    |666|F|60|50    | 666       | Follow       | 60           | 50         |
+    |1|U|12|9       | 1         | Unfollow     | 12           | 9          |
+    |542532|B       | 542532    | Broadcast    | -            | -          |
+    |43|P|32|56     | 43        | Private Msg  | 32           | 56         |
+    |634|S|32       | 634       | Status Update| 32           | -          |
+
+Routing logic:
+
+- Follow: mark From as a follower of To. Notify To.
+- Unfollow: remove From from To's follower list.
+- Broadcast: notify all connected users.
+- Private Msg: notify To.
+- Status Update: notify all of From's followers.
+
+* Main Problem: Event Ordering
+
+* Main Problem: Event Ordering
+
+Events should be *ordered*by*sequence* when sent to users.
+
+Events are transmitted *out*of*order* by the event source.
+
+We are *not* allowed to hold all of the events in memory.
+
+* Solving the Ordering Problem
+
+* Solving the Ordering Problem
+
+Recap:
+
+- We can't store everything in memory.
+- We can't transmit events as soon as they are received.
+
+* Solving the Ordering Problem
+
+We can store *some* events in memory (how many?).
+
+A trade-off between *safety* and *delay*.
+
+We need to store *enough* events to guarantee correct order.
+
+"Enough" could mean:
+
+- A *fixed*number*
+- A *time*period*
+
+(Fixed number: subsequent events can't be more than X events apart.)
+
+(Time period: subsequent events can't be more than X seconds apart.)
+
+We need more info to decide which is better (maybe use both?).
+
+* Solving the Ordering Problem
+
+Inside info: two subsequent events will never be more than *100*events* apart.
+
+* Solving the Ordering Problem
+
+Solution: *a*fixed-sized*buffer*.
+
+Implemented using a *min*heap*:
+
+- Sorting upon insertion.
+- Popping at a constant time.
+- Pushing at O(log n).
+
+* Design
+
+Two Go packages:
+- _events_ - responsible for handling incoming events.
+- _userclients_ - responsible for communicating with users.
+
+A thin _main_ function.
+
+*Goroutines*.
+
+*Channels* for regulating concurrent access to shared memory.
+
+*Mutexes* in specific cases.
