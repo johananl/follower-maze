@@ -9,8 +9,6 @@ import (
 	"bitbucket.org/johananl/follower-maze/userclients"
 )
 
-// TODO Fix public / private symbols
-
 func main() {
 	// Set logging
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds)

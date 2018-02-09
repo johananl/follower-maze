@@ -48,7 +48,7 @@ type EventHandler struct {
 	userHandler  *userclients.UserHandler
 }
 
-// AcceptConnections accepts TCP connections from event sources and sends back net.Conn structs.
+// acceptConnections accepts TCP connections from event sources and sends back net.Conn structs.
 func (eh *EventHandler) acceptConnections(l net.Listener) (<-chan net.Conn, chan bool) {
 	ch := make(chan net.Conn)
 	quit := make(chan bool)
@@ -78,15 +78,13 @@ func (eh *EventHandler) acceptConnections(l net.Listener) (<-chan net.Conn, chan
 	return ch, quit
 }
 
-// Reads a stream of events from a TCP connection and sends back events.
+// handleEvents reads a stream of events from a TCP connection and sends back event structs.
 func (eh *EventHandler) handleEvents(conn net.Conn) <-chan event {
 	ch := make(chan event)
 
 	go func() {
 		// Close connection when done reading.
 		defer func() {
-			// log.Println("Total events received:", totalReceived)
-
 			// Send any events left in the queue after the event connection is closed.
 			log.Println("Flushing queue")
 			eh.flushQueue()
@@ -99,7 +97,7 @@ func (eh *EventHandler) handleEvents(conn net.Conn) <-chan event {
 		// Continually read from connection. This loop iterates every time a newline-delimited string
 		// is read from the TCP connection. The loop blocks at ReadString().
 		for {
-			// TODO Could get valid data AND an error
+			// TODO Could get valid data AND an error?
 			message, err := br.ReadString('\n')
 			if err != nil {
 				switch err {
@@ -129,8 +127,8 @@ func (eh *EventHandler) handleEvents(conn net.Conn) <-chan event {
 	return ch
 }
 
-// These patterns are used by parseEvent to match incoming events. They are initialized outside
-// the function because compiling regex patterns is very expensive and parseEvent is called
+// The following patterns are used by parseEvent to match incoming events. They are initialized
+// outside the function because compiling regex patterns is very expensive and parseEvent is called
 // intensively.
 var fPattern = regexp.MustCompile(`^(\d+)\|F\|(\d+)\|(\d+)\n$`)
 var uPattern = regexp.MustCompile(`^(\d+)\|U\|(\d+)\|(\d+)\n$`)
@@ -138,9 +136,8 @@ var bPattern = regexp.MustCompile(`^(\d+)\|B\n$`)
 var pPattern = regexp.MustCompile(`^(\d+)\|P\|(\d+)\|(\d+)\n$`)
 var sPattern = regexp.MustCompile(`^(\d+)\|S\|(\d+)\n$`)
 
-// parseEvent gets a string and returns an Event or an error.
+// parseEvent gets a string and returns an event or an error.
 func (eh *EventHandler) parseEvent(e string) (event, error) {
-
 	var result event
 
 	if m := fPattern.FindStringSubmatch(e); len(m) != 0 {
@@ -200,8 +197,9 @@ func (eh *EventHandler) parseEvent(e string) (event, error) {
 	return result, nil
 }
 
-// Processes the received event. Depending on the event's type, processing may include registering
-// a Follow or Unfollow event and sending the event to one or more user clients.
+// processEvent processes the received event. Depending on the event's type, processing may
+// include registering a Follow or Unfollow event and sending the event to one or more user
+// clients.
 func (eh *EventHandler) processEvent(e event) {
 	switch e.eventType {
 	case follow:
@@ -231,8 +229,8 @@ func (eh *EventHandler) processEvent(e event) {
 	}
 }
 
-// Empties the queue by processing all remaining messages. This method is called once the event
-// source connection has been closed.
+// flushQueue empties the queue by processing all remaining messages. This method is called once
+// the event source connection has been closed.
 func (eh *EventHandler) flushQueue() {
 	for eh.queueManager.queueLength() > 0 {
 		eh.processEvent(eh.queueManager.popEvent())

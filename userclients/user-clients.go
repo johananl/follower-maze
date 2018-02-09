@@ -29,14 +29,14 @@ type User struct {
 // map has a mutex lock since multiple goroutines access it concurrently for both read and write
 // operations.
 type UserHandler struct {
-	// TODO Remove locks
+	// TODO Use channels instead of locks?
 	Users     map[int]net.Conn
 	uLock     sync.RWMutex
 	followers map[int][]int
 	fLock     sync.RWMutex
 }
 
-// AcceptConnections accepts TCP connections from user clients and sends back net.Conn structs.
+// acceptConnections accepts TCP connections from user clients and sends back net.Conn structs.
 func (uh *UserHandler) acceptConnections(l net.Listener) (<-chan net.Conn, chan<- bool) {
 	ch := make(chan net.Conn)
 	quit := make(chan bool)
@@ -66,7 +66,7 @@ func (uh *UserHandler) acceptConnections(l net.Listener) (<-chan net.Conn, chan<
 	return ch, quit
 }
 
-// Reads a user ID from the TCP connection and returns a User.
+// handleUser reads a user ID from the TCP connection and returns a User.
 func (uh *UserHandler) handleUser(conn net.Conn) <-chan User {
 	ch := make(chan User)
 	go func() {

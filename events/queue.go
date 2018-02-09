@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-// TODO Move queue to its own package
+// TODO Move queue to its own package?
 
 // eventQueueSize has to be equal to or larger than the max batch size used by the event source.
 // With a max batch size of 100, a queue size of 100 should suffice to avoid ordering problems.
@@ -27,12 +27,12 @@ var (
 	stopChan = make(chan bool)
 )
 
-// Stores an event in the queue.
+// pushEvent stores an event in the queue.
 func (qm *QueueManager) pushEvent(e event) {
 	pushChan <- e
 }
 
-// Returns the top (first) event in the queue and deletes it from the queue.
+// popEvent deletes the top (first) event in the queue and returns it.
 func (qm *QueueManager) popEvent() event {
 	result := make(chan event)
 	popChan <- result
@@ -49,9 +49,9 @@ func (qm *QueueManager) queueLength() int {
 	return <-result
 }
 
-// Run starts watching for incoming queue operations (push / pop) and performs them in
-// a thread-safe way. Selecting between push and pop operations serializes access to the
-// queue, thus guaranteeing safety.
+// Run starts watching for incoming queue operations and performs them in a thread-safe way.
+// Selecting between push, pop and len operations serializes access to the queue, thus guaranteeing
+// safety.
 func (qm *QueueManager) Run() chan bool {
 	log.Println("Starting queue")
 	go func() {
