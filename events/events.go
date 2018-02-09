@@ -89,7 +89,7 @@ func (eh *EventHandler) handleEvents(conn net.Conn) <-chan event {
 
 			// Send any events left in the queue after the event connection is closed.
 			log.Println("Flushing queue")
-			eh.flushQueue(eh.queueManager)
+			eh.flushQueue()
 
 			log.Println("Closing event connection")
 			conn.Close()
@@ -233,9 +233,9 @@ func (eh *EventHandler) processEvent(e event) {
 
 // Empties the queue by processing all remaining messages. This method is called once the event
 // source connection has been closed.
-func (eh *EventHandler) flushQueue(qm *QueueManager) {
-	for qm.queueLength() > 0 {
-		eh.processEvent(qm.popEvent())
+func (eh *EventHandler) flushQueue() {
+	for eh.queueManager.queueLength() > 0 {
+		eh.processEvent(eh.queueManager.popEvent())
 	}
 }
 
