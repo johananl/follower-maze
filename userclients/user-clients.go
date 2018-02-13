@@ -136,7 +136,8 @@ func (uh *UserHandler) Follow(from, to int) {
 func (uh *UserHandler) Unfollow(from, to int) {
 	uh.fLock.Lock()
 	defer uh.fLock.Unlock()
-	// TODO If performance for array lookups becomes a problem, use a sorted array + binary search.
+	// If performance for array lookups becomes a problem due to a very large number of
+	// followers, we can change to a sorted array + binary search.
 	for i := 0; i < len(uh.followers[to]); i++ {
 		if uh.followers[to][i] == from {
 			uh.followers[to] = append(uh.followers[to][:i], uh.followers[to][i+1:]...)
