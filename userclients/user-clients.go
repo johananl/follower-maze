@@ -145,7 +145,7 @@ func (uh *UserHandler) Unfollow(from, to int) {
 	}
 }
 
-// Followers returns a list of followers for the given user ID.
+// Followers returns a slice of followers for the given user ID.
 func (uh *UserHandler) Followers(id int) []int {
 	uh.fLock.RLock()
 	defer uh.fLock.RUnlock()
