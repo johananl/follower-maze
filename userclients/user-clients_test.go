@@ -72,3 +72,5 @@ func TestHandleUser(t *testing.T) {
 		t.Fatalf("Invalid user ID: got %v, want 123", u.id)
 	}
 }
+
+// TODO Cover the rest of the important functions in the package.
