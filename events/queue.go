@@ -60,6 +60,7 @@ func (qm *QueueManager) Run() chan bool {
 			case push := <-pushChan:
 				heap.Push(qm.queue, push)
 			case pop := <-popChan:
+				// TODO Why call heap here?
 				pop <- heap.Pop(qm.queue).(event)
 			case len := <-lenChan:
 				len <- qm.queue.Len()

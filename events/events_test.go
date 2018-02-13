@@ -37,6 +37,7 @@ var goodEvents = []struct {
 }
 
 var badEvents = []string{
+	// TODO Name test cases
 	"abcd",
 	"abcd\n",
 	"\n",
