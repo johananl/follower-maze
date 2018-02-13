@@ -16,8 +16,8 @@ const (
 	port = "9099"
 )
 
-// User represents a user client that is connected to the server. id is the user's ID and conn is
-// holds the connection on which that user is reachable.
+// User represents a user client that is connected to the server. id is the user's ID and
+// connection is the connection on which that user is reachable.
 type User struct {
 	id         int
 	connection net.Conn
