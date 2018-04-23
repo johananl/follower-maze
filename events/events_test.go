@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"bitbucket.org/johananl/follower-maze/userclients"
+	"github.com/johananl/follower-maze/userclients"
 )
 
 var qm = NewQueueManager()

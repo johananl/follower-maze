@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"bitbucket.org/johananl/follower-maze/userclients"
+	"github.com/johananl/follower-maze/userclients"
 )
 
 // Server config

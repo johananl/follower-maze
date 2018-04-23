@@ -5,8 +5,8 @@ import (
 	"os"
 	"os/signal"
 
-	"bitbucket.org/johananl/follower-maze/events"
-	"bitbucket.org/johananl/follower-maze/userclients"
+	"github.com/johananl/follower-maze/events"
+	"github.com/johananl/follower-maze/userclients"
 )
 
 func main() {
