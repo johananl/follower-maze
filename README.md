@@ -60,8 +60,10 @@ platforms without a problem.
 
 ### Building
 
-In order to build the solution, please copy the code to `$GOPATH/src/bitbucket.org/johananl/`, `cd` to that directory
-and run `go build`.
+In order to build the solution, do the following:
+
+- Run `go get -u github.com/johananl/follower-maze`.
+- Under `$GOPATH/src/github.com/johananl/follower-maze`, run `go build`.
 
 ### Testing
 
