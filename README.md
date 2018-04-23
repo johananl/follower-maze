@@ -62,7 +62,7 @@ platforms without a problem.
 
 In order to build the solution, do the following:
 
-- Run `go get -u github.com/johananl/follower-maze`.
+- Run `go get -d github.com/johananl/follower-maze`.
 - Under `$GOPATH/src/github.com/johananl/follower-maze`, run `go build`.
 
 ### Testing
